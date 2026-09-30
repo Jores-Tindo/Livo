@@ -1,0 +1,87 @@
+name: livo
+description: "Application de mise en relation client / livreur"
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^4.13.0
+  firebase_auth: ^6.5.7
+  cloud_firestore: ^6.8.0
+  firebase_storage: ^13.4.6
+  firebase_messaging: ^16.5.0
+  cloud_functions: ^6.3.6       # pour la logique sensible côté serveur (commission, payout)
+
+  # State management
+  flutter_riverpod: ^2.6.1
+
+  # Navigation
+  go_router: ^17.5.0
+
+  # Cartographie & géolocalisation
+  google_maps_flutter: ^2.18.0
+  geolocator: ^14.0.3
+  geocoding: ^5.0.0
+
+  # UI
+  cupertino_icons: ^1.0.8
+  flutter_svg: ^2.3.0
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0                # effet de chargement propre
+
+  # Formulaires & validation
+  flutter_form_builder: ^11.0.0
+  form_builder_validators: ^11.3.0
+
+  # Utilitaires
+  intl: ^0.20.3                  # formatage dates/devises (FCFA)
+  image_picker: ^1.2.3           # pièce d'identité, photos de mission
+  permission_handler: ^13.0.1
+  url_launcher: ^6.3.2            # appels téléphoniques directs
+  connectivity_plus: ^7.3.1       # gestion réseau instable
+
+  # Sécurité
+  flutter_secure_storage: ^11.0.0  # stockage sécurisé de tokens/sessions locales
+  flutter_localizations:
+    sdk: flutter
+  fl_chart: ^1.2.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.13
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/logo/Logo_livo.png"
+  background_color: "#ffffff"
+  min_sdk_android: 21 
+  adaptive_icon_background: "#E7F6EC"                          
+  adaptive_icon_foreground: "assets/images/logo/Logo_livo_foreground.png"  
+
+flutter_native_splash:
+  color: "#E7F6EC"
+  image: "assets/images/logo/Logo_livo_foreground.png"
+  android: true
+  ios: true
+  android_12:
+    image: "assets/images/logo/Logo_livo_foreground.png"
+    color: "#E7F6EC"
+  fullscreen: true
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/images/logo/

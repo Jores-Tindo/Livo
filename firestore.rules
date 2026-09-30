@@ -1,0 +1,130 @@
+rules_version = '2';
+
+// ============================================================
+// RÈGLES DE SÉCURITÉ FIRESTORE
+// Principe directeur : tout est INTERDIT par défaut, on n'autorise
+// que ce qui est explicitement nécessaire. C'est ce qui te protège
+// juridiquement en cas de fuite de données ou de litige (numéros
+// de téléphone, pièces d'identité, position en temps réel, argent).
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Fonctions utilitaires ---
+    function estConnecte() {
+      return request.auth != null;
+    }
+
+    function estProprietaire(userId) {
+      return estConnecte() && request.auth.uid == userId;
+    }
+
+    // L'admin est identifié par un custom claim défini côté serveur
+    // (jamais par un champ Firestore modifiable par le client)
+    function estAdmin() {
+      return estConnecte() && request.auth.token.admin == true;
+    }
+
+    function estLivreurValide(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId)) &&
+        get(/databases/$(database)/documents/users/$(userId)).data.role == 'livreur' &&
+        get(/databases/$(database)/documents/users/$(userId)).data.statutCandidature == 'valide';
+    }
+
+    // --- Utilisateurs ---
+    match /users/{userId} {
+      // Chacun peut lire son propre profil complet
+      allow read: if estProprietaire(userId) || estAdmin();
+
+      // Lecture limitée du profil public d'un livreur par un client
+      // (nom, note, photo — jamais les documents d'identité)
+      allow get: if estConnecte();
+
+      // Création uniquement de son propre compte, à l'inscription
+      allow create: if estProprietaire(userId);
+
+      // Modification : jamais du champ role ou statutCandidature côté client
+      // (ces champs ne changent que via une Cloud Function déclenchée par l'admin)
+      allow update: if estProprietaire(userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['role', 'statutCandidature', 'solde', 'estAdmin']);
+
+      allow update: if estAdmin();
+      allow delete: if estAdmin();
+    }
+
+    // --- Candidatures livreurs (documents sensibles : CNI, permis) ---
+    match /candidatures/{candidatureId} {
+      allow create: if estConnecte() && request.resource.data.userId == request.auth.uid;
+      allow read: if estAdmin() ||
+        (estConnecte() && resource.data.userId == request.auth.uid);
+      // Seul l'admin peut changer le statut d'une candidature
+      allow update: if estAdmin();
+      allow delete: if estAdmin();
+    }
+
+    // --- Missions ---
+    match /missions/{missionId} {
+      // Le client créateur et le livreur assigné peuvent lire la mission
+      allow read: if estAdmin() ||
+        (estConnecte() && (
+          resource.data.clientId == request.auth.uid ||
+          resource.data.livreurId == request.auth.uid
+        ));
+
+      // Création uniquement par un client connecté, pour lui-même
+      allow create: if estConnecte() &&
+        request.resource.data.clientId == request.auth.uid &&
+        request.resource.data.statut == 'en_attente_choix';
+
+      // Mise à jour de statut : transitions strictement encadrées.
+      // Un livreur ne peut passer une mission à 'acceptee' que si elle
+      // lui était proposée, et ne peut jamais modifier le tarif ou le client.
+      allow update: if estAdmin() || (
+        estConnecte() &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['clientId', 'tarif', 'commission']) &&
+        (
+          resource.data.clientId == request.auth.uid ||
+          resource.data.livreurId == request.auth.uid ||
+          (request.resource.data.livreurId == request.auth.uid &&
+           resource.data.statut == 'proposee')
+        )
+      );
+
+      allow delete: if estAdmin();
+    }
+
+    // --- Portefeuille / transactions financières ---
+    // JAMAIS modifiable directement par un client ou un livreur.
+    // Toute écriture passe par une Cloud Function (calcul de commission,
+    // crédit du solde, déclenchement d'un retrait Mobile Money).
+    match /transactions/{transactionId} {
+      allow read: if estAdmin() ||
+        (estConnecte() && resource.data.userId == request.auth.uid);
+      allow write: if false; // uniquement via Admin SDK côté serveur
+    }
+
+    // --- Positions en temps réel (données sensibles) ---
+    match /positions/{missionId} {
+      allow read: if estConnecte() && (
+        get(/databases/$(database)/documents/missions/$(missionId)).data.clientId == request.auth.uid ||
+        get(/databases/$(database)/documents/missions/$(missionId)).data.livreurId == request.auth.uid ||
+        estAdmin()
+      );
+      allow write: if estConnecte() &&
+        get(/databases/$(database)/documents/missions/$(missionId)).data.livreurId == request.auth.uid;
+    }
+
+    // --- Évaluations ---
+    match /evaluations/{evalId} {
+      allow read: if estConnecte();
+      allow create: if estConnecte() && request.resource.data.auteurId == request.auth.uid;
+      allow update, delete: if estAdmin();
+    }
+
+    // Par défaut, tout le reste est refusé (comportement natif de Firestore
+    // en l'absence de règle correspondante — rappel volontaire ici).
+  }
+}
