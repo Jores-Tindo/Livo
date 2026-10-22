@@ -201,10 +201,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     hint: 'Ex. Votre Nom',
                                     icone: Icons.person_outline_rounded,
                                     validator: (v) {
-                                      if (v == null || v.trim().isEmpty)
+                                      if (v == null || v.trim().isEmpty) {
                                         return 'Le nom est requis';
-                                      if (v.trim().length < 3)
+                                      }
+                                      if (v.trim().length < 3) {
                                         return 'Nom trop court';
+                                      }
                                       return null;
                                     },
                                   ),
@@ -216,10 +218,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     icone: Icons.phone_outlined,
                                     clavier: TextInputType.phone,
                                     validator: (v) {
-                                      if (v == null || v.trim().isEmpty)
+                                      if (v == null || v.trim().isEmpty) {
                                         return 'Le téléphone est requis';
-                                      if (v.trim().length < 8)
+                                      }
+                                      if (v.trim().length < 8) {
                                         return 'Numéro invalide';
+                                      }
                                       return null;
                                     },
                                   ),
@@ -231,12 +235,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     icone: Icons.mail_outline_rounded,
                                     clavier: TextInputType.emailAddress,
                                     validator: (v) {
-                                      if (v == null || v.trim().isEmpty)
+                                      if (v == null || v.trim().isEmpty) {
                                         return null;
+                                      }
                                       final motif =
                                           RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-                                      if (!motif.hasMatch(v.trim()))
+                                      if (!motif.hasMatch(v.trim())) {
                                         return 'Email invalide';
+                                      }
                                       return null;
                                     },
                                   ),
@@ -260,10 +266,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                               !_motDePasseVisible),
                                     ),
                                     validator: (v) {
-                                      if (v == null || v.isEmpty)
+                                      if (v == null || v.isEmpty) {
                                         return 'Le mot de passe est requis';
-                                      if (v.length < 6)
+                                      }
+                                      if (v.length < 6) {
                                         return 'Minimum 6 caractères';
+                                      }
                                       return null;
                                     },
                                   ),

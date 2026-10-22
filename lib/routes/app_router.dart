@@ -8,6 +8,8 @@ import '../presentation/screens/auth/candidature_livreur_screen.dart';
 import '../presentation/screens/auth/candidature_envoyee_screen.dart';
 import '../presentation/screens/client/client_shell_screen.dart';
 import '../presentation/screens/client/nouvelle_mission_screen.dart';
+import '../presentation/screens/client/liste_livreurs_screen.dart';
+import '../presentation/screens/client/proposition_envoyee_screen.dart';
 
 /// Centraliser la navigation ici évite deux problèmes fréquents :
 /// 1. Un utilisateur qui accède à un écran livreur alors qu'il est client
@@ -51,10 +53,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/client/nouvelle-mission',
         builder: (context, state) => const NouvelleMissionScreen(),
       ),
+      GoRoute(
+        path: '/client/liste-livreurs',
+        builder: (context, state) => const ListeLivreursScreen(),
+      ),
+      GoRoute(
+        path: '/client/proposition-envoyee',
+        builder: (context, state) {
+          final nomLivreur = state.extra as String? ?? 'ce livreur';
+          return PropositionEnvoyeeScreen(nomLivreur: nomLivreur);
+        },
+      ),
       // Prochaines routes à ajouter au fur et à mesure des écrans :
-      // GoRoute(path: '/candidature-livreur', builder: ...),
       // GoRoute(path: '/candidature-en-attente', builder: ...),
-      // GoRoute(path: '/client/accueil', builder: ...),
       // GoRoute(path: '/livreur/accueil', builder: ...),
     ],
   );
