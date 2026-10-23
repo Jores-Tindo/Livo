@@ -14,7 +14,8 @@ class PropositionEnvoyeeScreen extends StatefulWidget {
   const PropositionEnvoyeeScreen({super.key, required this.nomLivreur});
 
   @override
-  State<PropositionEnvoyeeScreen> createState() => _PropositionEnvoyeeScreenState();
+  State<PropositionEnvoyeeScreen> createState() =>
+      _PropositionEnvoyeeScreenState();
 }
 
 class _PropositionEnvoyeeScreenState extends State<PropositionEnvoyeeScreen> {
@@ -83,7 +84,8 @@ class _PropositionEnvoyeeScreenState extends State<PropositionEnvoyeeScreen> {
                           value: progression,
                           strokeWidth: 6,
                           backgroundColor: AppColors.border,
-                          valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                          valueColor:
+                              const AlwaysStoppedAnimation(AppColors.primary),
                         ),
                       ),
                       Column(
@@ -93,7 +95,10 @@ class _PropositionEnvoyeeScreenState extends State<PropositionEnvoyeeScreen> {
                             '$_secondesRestantes',
                             style: Theme.of(context).textTheme.headlineLarge,
                           ),
-                          const Text('secondes', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                          const Text('secondes',
+                              style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12)),
                         ],
                       ),
                     ],
@@ -128,7 +133,8 @@ class _PropositionEnvoyeeScreenState extends State<PropositionEnvoyeeScreen> {
                     shape: BoxShape.circle,
                     color: AppColors.statutEnAttente.withValues(alpha: 0.12),
                   ),
-                  child: const Icon(Icons.schedule_rounded, size: 64, color: AppColors.statutEnAttente),
+                  child: const Icon(Icons.schedule_rounded,
+                      size: 64, color: AppColors.statutEnAttente),
                 ),
                 const SizedBox(height: 32),
                 Text(

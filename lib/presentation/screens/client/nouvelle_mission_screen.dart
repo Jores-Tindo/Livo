@@ -71,7 +71,8 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
         final nouvelleAutorisation = await Geolocator.requestPermission();
         if (nouvelleAutorisation == LocationPermission.denied ||
             nouvelleAutorisation == LocationPermission.deniedForever) {
-          _afficherErreur('Autorise la localisation pour utiliser cette fonctionnalité');
+          _afficherErreur(
+              'Autorise la localisation pour utiliser cette fonctionnalité');
           return;
         }
       }
@@ -88,12 +89,16 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
   Future<void> _actualiserAdresse(LatLng position) async {
     setState(() => _chargementAdresse = true);
     try {
-      final places = await _geocoding.placemarkFromCoordinates(position.latitude, position.longitude);
+      final places = await _geocoding.placemarkFromCoordinates(
+          position.latitude, position.longitude);
       if (places.isNotEmpty) {
         final p = places.first;
         setState(() {
-          _adresseAffichee = [p.street, p.subLocality, p.locality].where((e) => e != null && e.isNotEmpty).join(', ');
-          if (_adresseAffichee.isEmpty) _adresseAffichee = 'Position sélectionnée';
+          _adresseAffichee = [p.street, p.subLocality, p.locality]
+              .where((e) => e != null && e.isNotEmpty)
+              .join(', ');
+          if (_adresseAffichee.isEmpty)
+            _adresseAffichee = 'Position sélectionnée';
         });
       }
     } catch (_) {
@@ -119,7 +124,8 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
   }
 
   Future<void> _choisirPhotoLieu() async {
-    final image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final image =
+        await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
     if (image != null) setState(() => _photoLieu = image);
   }
 
@@ -131,7 +137,8 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
 
   void _envoyerMission() {
     if (_typeDestinataire == _TypeDestinataire.autrePersonne &&
-        (_nomDestinataireController.text.trim().isEmpty || _telephoneDestinataireController.text.trim().isEmpty)) {
+        (_nomDestinataireController.text.trim().isEmpty ||
+            _telephoneDestinataireController.text.trim().isEmpty)) {
       _afficherErreur('Renseigne le nom et le téléphone du destinataire');
       return;
     }
@@ -146,7 +153,8 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
     // avec statut = 'en_attente_choix' avant de naviguer (voir cahier des
     // charges 2.4 — sélection manuelle par le client).
 
-    debugPrint('Mission : $_adresseDepart -> $_adresseArrivee, ${_descriptionColisController.text}');
+    debugPrint(
+        'Mission : $_adresseDepart -> $_adresseArrivee, ${_descriptionColisController.text}');
 
     setState(() => _chargementEnvoi = false);
     if (mounted) context.push('/client/liste-livreurs');
@@ -156,7 +164,9 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: _etape == _EtapeMission.position ? _construireEtapePosition() : _construireEtapeDetails(),
+      body: _etape == _EtapeMission.position
+          ? _construireEtapePosition()
+          : _construireEtapeDetails(),
     );
   }
 
@@ -165,7 +175,8 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
     return Stack(
       children: [
         GoogleMap(
-          initialCameraPosition: const CameraPosition(target: _positionParDefaut, zoom: 15),
+          initialCameraPosition:
+              const CameraPosition(target: _positionParDefaut, zoom: 15),
           onMapCreated: (controller) => _controleurCarte = controller,
           onCameraMove: (position) => _positionCarte = position.target,
           onCameraIdle: () => _actualiserAdresse(_positionCarte),
@@ -191,7 +202,8 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                 if (!_choixDepart) {
                   setState(() {
                     _choixDepart = true;
-                    _adresseAffichee = _adresseDepart ?? 'Déplace la carte pour choisir un point';
+                    _adresseAffichee = _adresseDepart ??
+                        'Déplace la carte pour choisir un point';
                   });
                 } else {
                   Navigator.of(context).maybePop();
@@ -205,7 +217,9 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
         Positioned(
           right: 16,
           bottom: 220,
-          child: _BoutonRond(icone: Icons.my_location_rounded, onTap: _utiliserPositionActuelle),
+          child: _BoutonRond(
+              icone: Icons.my_location_rounded,
+              onTap: _utiliserPositionActuelle),
         ),
 
         // Carte du bas : adresse + confirmation
@@ -246,12 +260,16 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.place_outlined, color: AppColors.textSecondary, size: 20),
+                        const Icon(Icons.place_outlined,
+                            color: AppColors.textSecondary, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
                           child: _chargementAdresse
-                              ? const Text('Localisation en cours...', style: TextStyle(color: AppColors.textSecondary))
-                              : Text(_adresseAffichee, maxLines: 2, overflow: TextOverflow.ellipsis),
+                              ? const Text('Localisation en cours...',
+                                  style:
+                                      TextStyle(color: AppColors.textSecondary))
+                              : Text(_adresseAffichee,
+                                  maxLines: 2, overflow: TextOverflow.ellipsis),
                         ),
                       ],
                     ),
@@ -261,7 +279,9 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                     height: 54,
                     child: ElevatedButton(
                       onPressed: _chargementAdresse ? null : _confirmerPosition,
-                      child: Text(_choixDepart ? 'Confirmer le départ' : 'Confirmer l\'arrivée'),
+                      child: Text(_choixDepart
+                          ? 'Confirmer le départ'
+                          : 'Confirmer l\'arrivée'),
                     ),
                   ),
                 ],
@@ -287,7 +307,8 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                   onTap: () => setState(() => _etape = _EtapeMission.position),
                 ),
                 const SizedBox(width: 12),
-                Text('Détails de la mission', style: Theme.of(context).textTheme.titleLarge),
+                Text('Détails de la mission',
+                    style: Theme.of(context).textTheme.titleLarge),
               ],
             ),
           ),
@@ -307,29 +328,40 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                     ),
                     child: Column(
                       children: [
-                        _LigneTrajet(icone: Icons.trip_origin, couleur: AppColors.primary, texte: _adresseDepart ?? ''),
+                        _LigneTrajet(
+                            icone: Icons.trip_origin,
+                            couleur: AppColors.primary,
+                            texte: _adresseDepart ?? ''),
                         const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 4, horizontal: 9),
+                          padding:
+                              EdgeInsets.symmetric(vertical: 4, horizontal: 9),
                           child: SizedBox(
                             height: 16,
-                            child: VerticalDivider(color: AppColors.border, thickness: 1.5),
+                            child: VerticalDivider(
+                                color: AppColors.border, thickness: 1.5),
                           ),
                         ),
-                        _LigneTrajet(icone: Icons.flag_rounded, couleur: AppColors.danger, texte: _adresseArrivee ?? ''),
+                        _LigneTrajet(
+                            icone: Icons.flag_rounded,
+                            couleur: AppColors.danger,
+                            texte: _adresseArrivee ?? ''),
                       ],
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  Text('Point de repère (optionnel)', style: Theme.of(context).textTheme.titleLarge),
+                  Text('Point de repère (optionnel)',
+                      style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 4),
-                  Text('Utile si l\'adresse est difficile à trouver', style: Theme.of(context).textTheme.bodyMedium),
+                  Text('Utile si l\'adresse est difficile à trouver',
+                      style: Theme.of(context).textTheme.bodyMedium),
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: _pointRepereController,
                     decoration: const InputDecoration(
                       hintText: 'Ex. Près du grand manguier, maison bleue',
-                      prefixIcon: Icon(Icons.push_pin_outlined, color: AppColors.textSecondary, size: 20),
+                      prefixIcon: Icon(Icons.push_pin_outlined,
+                          color: AppColors.textSecondary, size: 20),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -348,14 +380,19 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                           if (_photoLieu != null)
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.file(File(_photoLieu!.path), width: 36, height: 36, fit: BoxFit.cover),
+                              child: Image.file(File(_photoLieu!.path),
+                                  width: 36, height: 36, fit: BoxFit.cover),
                             )
                           else
-                            const Icon(Icons.add_a_photo_outlined, color: AppColors.textSecondary, size: 22),
+                            const Icon(Icons.add_a_photo_outlined,
+                                color: AppColors.textSecondary, size: 22),
                           const SizedBox(width: 12),
                           Text(
-                            _photoLieu != null ? 'Photo ajoutée' : 'Ajouter une photo du lieu (optionnel)',
-                            style: const TextStyle(color: AppColors.textSecondary),
+                            _photoLieu != null
+                                ? 'Photo ajoutée'
+                                : 'Ajouter une photo du lieu (optionnel)',
+                            style:
+                                const TextStyle(color: AppColors.textSecondary),
                           ),
                         ],
                       ),
@@ -363,19 +400,22 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  Text('Description du colis', style: Theme.of(context).textTheme.titleLarge),
+                  Text('Description du colis',
+                      style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: _descriptionColisController,
                     maxLines: 2,
                     decoration: const InputDecoration(
                       hintText: 'Ex. Un carton de vêtements, environ 3 kg',
-                      prefixIcon: Icon(Icons.inventory_2_outlined, color: AppColors.textSecondary, size: 20),
+                      prefixIcon: Icon(Icons.inventory_2_outlined,
+                          color: AppColors.textSecondary, size: 20),
                     ),
                   ),
                   const SizedBox(height: 24),
 
-                  Text('Qui reçoit le colis ?', style: Theme.of(context).textTheme.titleLarge),
+                  Text('Qui reçoit le colis ?',
+                      style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -383,8 +423,10 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                         child: _ChoixDestinataire(
                           label: 'Moi-même',
                           icone: Icons.person_outline_rounded,
-                          selectionne: _typeDestinataire == _TypeDestinataire.moiMeme,
-                          onTap: () => setState(() => _typeDestinataire = _TypeDestinataire.moiMeme),
+                          selectionne:
+                              _typeDestinataire == _TypeDestinataire.moiMeme,
+                          onTap: () => setState(() =>
+                              _typeDestinataire = _TypeDestinataire.moiMeme),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -392,8 +434,10 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                         child: _ChoixDestinataire(
                           label: 'Une autre personne',
                           icone: Icons.people_outline_rounded,
-                          selectionne: _typeDestinataire == _TypeDestinataire.autrePersonne,
-                          onTap: () => setState(() => _typeDestinataire = _TypeDestinataire.autrePersonne),
+                          selectionne: _typeDestinataire ==
+                              _TypeDestinataire.autrePersonne,
+                          onTap: () => setState(() => _typeDestinataire =
+                              _TypeDestinataire.autrePersonne),
                         ),
                       ),
                     ],
@@ -405,7 +449,8 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                       controller: _nomDestinataireController,
                       decoration: const InputDecoration(
                         labelText: 'Nom du destinataire',
-                        prefixIcon: Icon(Icons.badge_outlined, color: AppColors.textSecondary, size: 20),
+                        prefixIcon: Icon(Icons.badge_outlined,
+                            color: AppColors.textSecondary, size: 20),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -414,7 +459,8 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                       keyboardType: TextInputType.phone,
                       decoration: const InputDecoration(
                         labelText: 'Téléphone du destinataire',
-                        prefixIcon: Icon(Icons.phone_outlined, color: AppColors.textSecondary, size: 20),
+                        prefixIcon: Icon(Icons.phone_outlined,
+                            color: AppColors.textSecondary, size: 20),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -426,12 +472,14 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.info_outline_rounded, color: AppColors.info, size: 18),
+                          Icon(Icons.info_outline_rounded,
+                              color: AppColors.info, size: 18),
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               'Le destinataire recevra un SMS avec le suivi de la livraison.',
-                              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                              style: TextStyle(
+                                  color: AppColors.textSecondary, fontSize: 13),
                             ),
                           ),
                         ],
@@ -452,16 +500,24 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.payments_outlined, color: Colors.white, size: 22),
+                        const Icon(Icons.payments_outlined,
+                            color: Colors.white, size: 22),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Tarif estimé', style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13)),
+                              Text('Tarif estimé',
+                                  style: TextStyle(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.85),
+                                      fontSize: 13)),
                               const Text(
                                 'Calculé à l\'étape suivante',
-                                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16),
                               ),
                             ],
                           ),
@@ -479,7 +535,8 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
                             )
                           : const Text('Voir les livreurs disponibles'),
                     ),
@@ -509,7 +566,12 @@ class _BoutonRond extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           shape: BoxShape.circle,
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 8, offset: const Offset(0, 2))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2))
+          ],
         ),
         child: Icon(icone, color: AppColors.textPrimary),
       ),
@@ -521,7 +583,8 @@ class _LigneTrajet extends StatelessWidget {
   final IconData icone;
   final Color couleur;
   final String texte;
-  const _LigneTrajet({required this.icone, required this.couleur, required this.texte});
+  const _LigneTrajet(
+      {required this.icone, required this.couleur, required this.texte});
 
   @override
   Widget build(BuildContext context) {
@@ -529,7 +592,8 @@ class _LigneTrajet extends StatelessWidget {
       children: [
         Icon(icone, color: couleur, size: 18),
         const SizedBox(width: 10),
-        Expanded(child: Text(texte, maxLines: 1, overflow: TextOverflow.ellipsis)),
+        Expanded(
+            child: Text(texte, maxLines: 1, overflow: TextOverflow.ellipsis)),
       ],
     );
   }
@@ -540,7 +604,11 @@ class _ChoixDestinataire extends StatelessWidget {
   final IconData icone;
   final bool selectionne;
   final VoidCallback onTap;
-  const _ChoixDestinataire({required this.label, required this.icone, required this.selectionne, required this.onTap});
+  const _ChoixDestinataire(
+      {required this.label,
+      required this.icone,
+      required this.selectionne,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -550,13 +618,19 @@ class _ChoixDestinataire extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: selectionne ? AppColors.primary.withValues(alpha: 0.1) : AppColors.surface,
+          color: selectionne
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : AppColors.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: selectionne ? AppColors.primary : AppColors.border),
+          border: Border.all(
+              color: selectionne ? AppColors.primary : AppColors.border),
         ),
         child: Column(
           children: [
-            Icon(icone, color: selectionne ? AppColors.primary : AppColors.textSecondary, size: 22),
+            Icon(icone,
+                color:
+                    selectionne ? AppColors.primary : AppColors.textSecondary,
+                size: 22),
             const SizedBox(height: 6),
             Text(
               label,
