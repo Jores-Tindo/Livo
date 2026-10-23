@@ -6,10 +6,14 @@ import '../presentation/screens/auth/role_selection_screen.dart';
 import '../presentation/screens/auth/login_screen.dart';
 import '../presentation/screens/auth/candidature_livreur_screen.dart';
 import '../presentation/screens/auth/candidature_envoyee_screen.dart';
+import '../presentation/screens/auth/candidature_en_attente_screen.dart';
 import '../presentation/screens/client/client_shell_screen.dart';
 import '../presentation/screens/client/nouvelle_mission_screen.dart';
 import '../presentation/screens/client/liste_livreurs_screen.dart';
 import '../presentation/screens/client/proposition_envoyee_screen.dart';
+import '../presentation/screens/livreur/livreur_shell_screen.dart';
+import '../presentation/screens/livreur/mission_proposee_screen.dart';
+import '../presentation/screens/livreur/mission_en_cours_screen.dart';
 
 /// Centraliser la navigation ici évite deux problèmes fréquents :
 /// 1. Un utilisateur qui accède à un écran livreur alors qu'il est client
@@ -64,9 +68,45 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return PropositionEnvoyeeScreen(nomLivreur: nomLivreur);
         },
       ),
-      // Prochaines routes à ajouter au fur et à mesure des écrans :
-      // GoRoute(path: '/candidature-en-attente', builder: ...),
-      // GoRoute(path: '/livreur/accueil', builder: ...),
+      GoRoute(
+        path: '/livreur/accueil',
+        builder: (context, state) => const LivreurShellScreen(),
+      ),
+      GoRoute(
+        path: '/livreur/mission-proposee',
+        builder: (context, state) {
+          final donnees = state.extra as Map<String, dynamic>? ?? {};
+          return MissionProposeeScreen(
+            nomClient: donnees['nomClient'] as String? ?? 'Client',
+            adresseDepart: donnees['adresseDepart'] as String? ?? '—',
+            adresseArrivee: donnees['adresseArrivee'] as String? ?? '—',
+            distanceKm: (donnees['distanceKm'] as num?)?.toDouble() ?? 0,
+            montant: donnees['montant'] as int? ?? 0,
+            description: donnees['description'] as String? ?? '—',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/livreur/mission-en-cours',
+        builder: (context, state) {
+          final donnees = state.extra as Map<String, dynamic>? ?? {};
+          return MissionEnCoursScreen(
+            nomClient: donnees['nomClient'] as String? ?? 'Client',
+            adresseDepart: donnees['adresseDepart'] as String? ?? '—',
+            adresseArrivee: donnees['adresseArrivee'] as String? ?? '—',
+            montant: donnees['montant'] as int? ?? 0,
+            description: donnees['description'] as String? ?? '—',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/candidature-en-attente',
+        builder: (context, state) {
+          final statut =
+              state.extra as StatutAffichage? ?? StatutAffichage.enAttente;
+          return CandidatureEnAttenteScreen(statut: statut);
+        },
+      ),
     ],
   );
 });

@@ -131,13 +131,24 @@ class CandidatureEnvoyeeScreen extends StatelessWidget {
               const SizedBox(height: 12),
 
               TextButton(
-                onPressed: () {
-                  // TODO : une fois Firebase branché, permettre de relire
-                  // son propre statut de candidature en direct (Firestore
-                  // listener sur candidatures/{userId})
-                  debugPrint('Suivre ma candidature');
-                },
+                onPressed: () => context.push('/candidature-en-attente'),
                 child: const Text('Suivre ma candidature'),
+              ),
+
+              // --- Accès temporaire pour prévisualiser l'espace livreur ---
+              // TODO : SUPPRIMER ce bouton une fois Firebase/Auth branché.
+              // Il ne sert qu'à tester l'UI livreur avant que la validation
+              // de candidature (statut == 'valide') ne débloque vraiment
+              // l'accès, comme prévu au cahier des charges.
+              const SizedBox(height: 24),
+              TextButton.icon(
+                onPressed: () => context.go('/livreur/accueil'),
+                icon: const Icon(Icons.visibility_outlined,
+                    size: 18, color: AppColors.textSecondary),
+                label: const Text(
+                  '(Démo) Voir l\'espace livreur',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
               ),
             ],
           ),

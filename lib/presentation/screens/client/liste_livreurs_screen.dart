@@ -81,7 +81,8 @@ class ListeLivreursScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
             child: Row(
               children: [
-                const Icon(Icons.location_on_rounded, color: AppColors.primary, size: 18),
+                const Icon(Icons.location_on_rounded,
+                    color: AppColors.primary, size: 18),
                 const SizedBox(width: 6),
                 Text(
                   '${_livreursMock.length} livreurs près de toi',
@@ -99,7 +100,8 @@ class ListeLivreursScreen extends StatelessWidget {
                 final livreur = _livreursMock[index];
                 return _CarteLivreurDispo(
                   livreur: livreur,
-                  onChoisir: () => context.push('/client/proposition-envoyee', extra: livreur.nom),
+                  onChoisir: () => context.push('/client/proposition-envoyee',
+                      extra: livreur.nom),
                 );
               },
             ),
@@ -140,7 +142,8 @@ class _CarteLivreurDispo extends StatelessWidget {
               color: AppColors.primaryLight.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(livreur.iconeVehicule, color: AppColors.primary, size: 28),
+            child:
+                Icon(livreur.iconeVehicule, color: AppColors.primary, size: 28),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -155,9 +158,11 @@ class _CarteLivreurDispo extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.star_rounded, color: AppColors.warning, size: 16),
+                    const Icon(Icons.star_rounded,
+                        color: AppColors.warning, size: 16),
                     const SizedBox(width: 2),
-                    Text('${livreur.note}', style: Theme.of(context).textTheme.bodySmall),
+                    Text('${livreur.note}',
+                        style: Theme.of(context).textTheme.bodySmall),
                     const SizedBox(width: 10),
                     Text(
                       '${livreur.nombreLivraisons} livraisons',
@@ -168,9 +173,11 @@ class _CarteLivreurDispo extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Text(livreur.vehicule, style: Theme.of(context).textTheme.bodySmall),
+                    Text(livreur.vehicule,
+                        style: Theme.of(context).textTheme.bodySmall),
                     const SizedBox(width: 8),
-                    const Icon(Icons.circle, size: 3, color: AppColors.textSecondary),
+                    const Icon(Icons.circle,
+                        size: 3, color: AppColors.textSecondary),
                     const SizedBox(width: 8),
                     Text(
                       '${livreur.distanceKm.toStringAsFixed(1)} km',
