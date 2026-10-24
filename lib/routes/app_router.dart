@@ -14,6 +14,14 @@ import '../presentation/screens/client/proposition_envoyee_screen.dart';
 import '../presentation/screens/livreur/livreur_shell_screen.dart';
 import '../presentation/screens/livreur/mission_proposee_screen.dart';
 import '../presentation/screens/livreur/mission_en_cours_screen.dart';
+import '../presentation/screens/livreur/mon_vehicule_screen.dart';
+import '../presentation/screens/livreur/mes_documents_screen.dart';
+import '../presentation/screens/livreur/zone_couverture_screen.dart';
+import '../presentation/screens/client/mes_adresses_screen.dart';
+import '../presentation/screens/client/moyens_paiement_screen.dart';
+import '../presentation/screens/client/destinataires_favoris_screen.dart';
+import '../presentation/screens/commun/modifier_profil_screen.dart';
+import '../presentation/screens/commun/aide_support_screen.dart';
 
 /// Centraliser la navigation ici évite deux problèmes fréquents :
 /// 1. Un utilisateur qui accède à un écran livreur alors qu'il est client
@@ -106,6 +114,38 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               state.extra as StatutAffichage? ?? StatutAffichage.enAttente;
           return CandidatureEnAttenteScreen(statut: statut);
         },
+      ),
+      GoRoute(
+        path: '/profil/modifier',
+        builder: (context, state) => const ModifierProfilScreen(),
+      ),
+      GoRoute(
+        path: '/profil/aide',
+        builder: (context, state) => const AideSupportScreen(),
+      ),
+      GoRoute(
+        path: '/livreur/mon-vehicule',
+        builder: (context, state) => const MonVehiculeScreen(),
+      ),
+      GoRoute(
+        path: '/livreur/mes-documents',
+        builder: (context, state) => const MesDocumentsScreen(),
+      ),
+      GoRoute(
+        path: '/livreur/zone-couverture',
+        builder: (context, state) => const ZoneCouvertureScreen(),
+      ),
+      GoRoute(
+        path: '/client/mes-adresses',
+        builder: (context, state) => const MesAdressesScreen(),
+      ),
+      GoRoute(
+        path: '/client/moyens-paiement',
+        builder: (context, state) => const MoyensPaiementScreen(),
+      ),
+      GoRoute(
+        path: '/client/destinataires-favoris',
+        builder: (context, state) => const DestinatairesFavorisScreen(),
       ),
     ],
   );

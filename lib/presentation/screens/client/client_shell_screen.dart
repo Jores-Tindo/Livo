@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
-import 'client_acceuil_screen.dart';
-import 'historique_screen.dart';
+import '../../../domain/entities/utilisateur.dart';
+import '../commun/historique_screen.dart';
+import '../commun/profil_screen.dart';
+import 'client_accueil_screen.dart';
+import 'mes_missions_screen.dart';
 
 /// Enveloppe de navigation pour tout le parcours client, avec une
 /// BottomNavigationBar commune. Chaque onglet garde son état grâce à
@@ -19,9 +22,9 @@ class _ClientShellScreenState extends State<ClientShellScreen> {
 
   static const _pages = [
     ClientAccueilScreen(),
-    _OngletAVenir(titre: 'Mes missions', icone: Icons.local_shipping_outlined),
-    HistoriqueScreen(),
-    _OngletAVenir(titre: 'Profil', icone: Icons.person_outline_rounded),
+    MesMissionsScreen(),
+    HistoriqueScreen(role: RoleUtilisateur.client),
+    ProfilScreen(role: RoleUtilisateur.client),
   ];
 
   @override
@@ -126,33 +129,6 @@ class _ItemNav extends StatelessWidget {
                 color: actif ? AppColors.primary : AppColors.textSecondary,
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Placeholder pour les onglets pas encore développés.
-class _OngletAVenir extends StatelessWidget {
-  final String titre;
-  final IconData icone;
-  const _OngletAVenir({required this.titre, required this.icone});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.background,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icone, size: 48, color: AppColors.textSecondary),
-            const SizedBox(height: 16),
-            Text(titre, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 4),
-            Text('Bientôt disponible',
-                style: Theme.of(context).textTheme.bodyMedium),
           ],
         ),
       ),

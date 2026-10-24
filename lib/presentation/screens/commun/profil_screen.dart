@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../domain/entities/utilisateur.dart';
 
-/// Contenu de l'onglet Profil pour un livreur. Pas de Scaffold propre,
-/// affiché dans LivreurShellScreen.
+/// Écran de profil unique, partagé entre client et livreur — même en-tête,
+/// même style de menu, seules les sections "Mon activité" changent selon
+/// le rôle. Évite de maintenir deux écrans quasi identiques en double.
+/// Affiché dans ClientShellScreen (role: client) et LivreurShellScreen
+/// (role: livreur). Pas de Scaffold propre.
 ///
-/// TODO une fois Firebase branché : charger les infos depuis
-/// utilisateurs/{uid} + livreurs/{uid} (véhicule, note moyenne,
-/// documents validés), et brancher la déconnexion sur FirebaseAuth.
-class LivreurProfilScreen extends StatelessWidget {
-  const LivreurProfilScreen({super.key});
+/// TODO une fois Firebase branché : charger nom/téléphone/email depuis
+/// utilisateurs/{uid}, et pour un livreur, véhicule/note/documents depuis
+/// livreurs/{uid}. Brancher la déconnexion sur FirebaseAuth.signOut().
+class ProfilScreen extends StatelessWidget {
+  final RoleUtilisateur role;
+
+  const ProfilScreen({super.key, required this.role});
+
+  bool get _estLivreur => role == RoleUtilisateur.livreur;
 
   @override
   Widget build(BuildContext context) {
@@ -56,20 +64,28 @@ class LivreurProfilScreen extends StatelessWidget {
                         Text('Jores A.',
                             style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: 2),
-                        Row(
-                          children: const [
-                            Icon(Icons.star_rounded,
-                                color: AppColors.accent, size: 16),
-                            SizedBox(width: 2),
-                            Text('4.8',
-                                style: TextStyle(fontWeight: FontWeight.w600)),
-                            SizedBox(width: 8),
-                            Text('• 213 livraisons',
-                                style: TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 13)),
-                          ],
-                        ),
+                        if (_estLivreur)
+                          Row(
+                            children: const [
+                              Icon(Icons.star_rounded,
+                                  color: AppColors.accent, size: 16),
+                              SizedBox(width: 2),
+                              Text('4.8',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.w600)),
+                              SizedBox(width: 8),
+                              Text('• 213 livraisons',
+                                  style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 13)),
+                            ],
+                          )
+                        else
+                          const Text(
+                            '• 01 97 00 00 00',
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 13),
+                          ),
                         const SizedBox(height: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -96,26 +112,51 @@ class LivreurProfilScreen extends StatelessWidget {
             const SizedBox(height: 28),
             Text('Mon activité', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
-            _CarteMenu(
-              icone: Icons.two_wheeler_outlined,
-              titre: 'Mon véhicule',
-              sousTitre: 'Moto • AB 1234 RB',
-              onTap: () => debugPrint('Véhicule'),
-            ),
-            const SizedBox(height: 10),
-            _CarteMenu(
-              icone: Icons.badge_outlined,
-              titre: 'Mes documents',
-              sousTitre: 'Pièce d\'identité, permis',
-              onTap: () => debugPrint('Documents'),
-            ),
-            const SizedBox(height: 10),
-            _CarteMenu(
-              icone: Icons.map_outlined,
-              titre: 'Zone de couverture',
-              sousTitre: 'Cotonou, Akpakpa',
-              onTap: () => debugPrint('Zone'),
-            ),
+
+            // --- Section spécifique au rôle ---
+            if (_estLivreur) ...[
+              _CarteMenu(
+                icone: Icons.two_wheeler_outlined,
+                titre: 'Mon véhicule',
+                sousTitre: 'Moto • AB 1234 RB',
+                onTap: () => context.push('/livreur/mon-vehicule'),
+              ),
+              const SizedBox(height: 10),
+              _CarteMenu(
+                icone: Icons.badge_outlined,
+                titre: 'Mes documents',
+                sousTitre: 'Pièce d\'identité, permis',
+                onTap: () => context.push('/livreur/mes-documents'),
+              ),
+              const SizedBox(height: 10),
+              _CarteMenu(
+                icone: Icons.map_outlined,
+                titre: 'Zone de couverture',
+                sousTitre: 'Cotonou, Akpakpa',
+                onTap: () => context.push('/livreur/zone-couverture'),
+              ),
+            ] else ...[
+              _CarteMenu(
+                icone: Icons.location_on_outlined,
+                titre: 'Mes adresses enregistrées',
+                sousTitre: 'Domicile, travail...',
+                onTap: () => context.push('/client/mes-adresses'),
+              ),
+              const SizedBox(height: 10),
+              _CarteMenu(
+                icone: Icons.account_balance_wallet_outlined,
+                titre: 'Moyens de paiement',
+                sousTitre: 'Mobile Money',
+                onTap: () => context.push('/client/moyens-paiement'),
+              ),
+              const SizedBox(height: 10),
+              _CarteMenu(
+                icone: Icons.people_outline_rounded,
+                titre: 'Destinataires favoris',
+                sousTitre: 'Accès rapide à tes contacts habituels',
+                onTap: () => context.push('/client/destinataires-favoris'),
+              ),
+            ],
 
             const SizedBox(height: 28),
             Text('Compte', style: Theme.of(context).textTheme.titleLarge),
@@ -123,13 +164,13 @@ class LivreurProfilScreen extends StatelessWidget {
             _CarteMenu(
               icone: Icons.edit_outlined,
               titre: 'Modifier mon profil',
-              onTap: () => debugPrint('Modifier profil'),
+              onTap: () => context.push('/profil/modifier'),
             ),
             const SizedBox(height: 10),
             _CarteMenu(
               icone: Icons.help_outline_rounded,
               titre: 'Aide et support',
-              onTap: () => debugPrint('Aide'),
+              onTap: () => context.push('/profil/aide'),
             ),
             const SizedBox(height: 10),
             _CarteMenu(

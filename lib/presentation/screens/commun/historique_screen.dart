@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../domain/entities/utilisateur.dart';
 
 enum _TypeGraphique { barres, cercle }
 
 enum _Periode { semaine, mois, annee }
 
-/// Dashboard historique du client : statistiques globales + graphique
-/// bascule barres/donut selon la période sélectionnée. Données mockées
+/// Dashboard historique unique, partagé entre client et livreur — mêmes
+/// filtres, même bascule de graphique, seules les statistiques et le
+/// libellé du montant total changent selon le rôle. Données mockées
 /// pour l'instant — à remplacer par une agrégation Firestore une fois
 /// branché (probablement via une Cloud Function qui pré-calcule ces
 /// chiffres plutôt que de tout recompter côté client).
 class HistoriqueScreen extends StatefulWidget {
-  const HistoriqueScreen({super.key});
+  final RoleUtilisateur role;
+  const HistoriqueScreen({super.key, required this.role});
 
   @override
   State<HistoriqueScreen> createState() => _HistoriqueScreenState();
@@ -22,41 +25,78 @@ class _HistoriqueScreenState extends State<HistoriqueScreen> {
   _TypeGraphique _typeGraphique = _TypeGraphique.barres;
   _Periode _periode = _Periode.mois;
 
-  // --- Données mockées, à connecter à Firestore plus tard ---
-  static const _stats = [
-    _Stat(
-        label: 'Missions faites',
-        valeur: '42',
-        icone: Icons.list_alt_rounded,
-        couleur: AppColors.primary),
-    _Stat(
-        label: 'Effectuées',
-        valeur: '37',
-        icone: Icons.check_circle_outline_rounded,
-        couleur: AppColors.success),
-    _Stat(
-        label: 'Annulées',
-        valeur: '5',
-        icone: Icons.cancel_outlined,
-        couleur: AppColors.danger),
-    _Stat(
-        label: 'Colis reçus',
-        valeur: '40',
-        icone: Icons.inventory_2_outlined,
-        couleur: AppColors.info),
-    _Stat(
-        label: 'Livreurs contactés',
-        valeur: '15',
-        icone: Icons.people_outline_rounded,
-        couleur: AppColors.accent),
-    _Stat(
-        label: 'Paiements',
-        valeur: '42',
-        icone: Icons.receipt_long_outlined,
-        couleur: AppColors.primaryLight),
-  ];
+  bool get _estLivreur => widget.role == RoleUtilisateur.livreur;
 
-  static const _montantTotal = '128 500 FCFA';
+  List<_Stat> get _stats => _estLivreur
+      ? const [
+          _Stat(
+              label: 'Missions faites',
+              valeur: '58',
+              icone: Icons.list_alt_rounded,
+              couleur: AppColors.primary),
+          _Stat(
+              label: 'Livrées',
+              valeur: '52',
+              icone: Icons.check_circle_outline_rounded,
+              couleur: AppColors.success),
+          _Stat(
+              label: 'Annulées',
+              valeur: '6',
+              icone: Icons.cancel_outlined,
+              couleur: AppColors.danger),
+          _Stat(
+              label: 'Clients servis',
+              valeur: '45',
+              icone: Icons.people_outline_rounded,
+              couleur: AppColors.info),
+          _Stat(
+              label: 'Distance totale',
+              valeur: '186 km',
+              icone: Icons.alt_route_rounded,
+              couleur: AppColors.accent),
+          _Stat(
+              label: 'Note moyenne',
+              valeur: '4.8',
+              icone: Icons.star_outline_rounded,
+              couleur: AppColors.primaryLight),
+        ]
+      : const [
+          _Stat(
+              label: 'Missions faites',
+              valeur: '42',
+              icone: Icons.list_alt_rounded,
+              couleur: AppColors.primary),
+          _Stat(
+              label: 'Effectuées',
+              valeur: '37',
+              icone: Icons.check_circle_outline_rounded,
+              couleur: AppColors.success),
+          _Stat(
+              label: 'Annulées',
+              valeur: '5',
+              icone: Icons.cancel_outlined,
+              couleur: AppColors.danger),
+          _Stat(
+              label: 'Colis reçus',
+              valeur: '40',
+              icone: Icons.inventory_2_outlined,
+              couleur: AppColors.info),
+          _Stat(
+              label: 'Livreurs contactés',
+              valeur: '15',
+              icone: Icons.people_outline_rounded,
+              couleur: AppColors.accent),
+          _Stat(
+              label: 'Paiements',
+              valeur: '42',
+              icone: Icons.receipt_long_outlined,
+              couleur: AppColors.primaryLight),
+        ];
+
+  String get _montantTotal => _estLivreur ? '96 800 FCFA' : '128 500 FCFA';
+  String get _libelleMontant => _estLivreur ? 'Total gagné' : 'Total dépensé';
+  IconData get _iconeMontant =>
+      _estLivreur ? Icons.savings_outlined : Icons.payments_outlined;
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +201,7 @@ class _HistoriqueScreenState extends State<HistoriqueScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Total dépensé (${_libellePeriode(_periode)})',
+                              '$_libelleMontant (${_libellePeriode(_periode)})',
                               style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.85),
                                   fontSize: 13),
@@ -184,8 +224,8 @@ class _HistoriqueScreenState extends State<HistoriqueScreen> {
                           color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(Icons.payments_outlined,
-                            color: Colors.white, size: 26),
+                        child:
+                            Icon(_iconeMontant, color: Colors.white, size: 26),
                       ),
                     ],
                   ),
@@ -453,23 +493,11 @@ class _GraphiqueCercle extends StatelessWidget {
               centerSpaceRadius: 50,
               sections: [
                 PieChartSectionData(
-                  value: 37,
-                  color: AppColors.primary,
-                  title: '',
-                  radius: 26,
-                ),
+                    value: 37, color: AppColors.primary, title: '', radius: 26),
                 PieChartSectionData(
-                  value: 5,
-                  color: AppColors.danger,
-                  title: '',
-                  radius: 26,
-                ),
+                    value: 5, color: AppColors.danger, title: '', radius: 26),
                 PieChartSectionData(
-                  value: 3,
-                  color: AppColors.accent,
-                  title: '',
-                  radius: 26,
-                ),
+                    value: 3, color: AppColors.accent, title: '', radius: 26),
               ],
             ),
           ),

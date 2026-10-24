@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../domain/entities/utilisateur.dart';
+import '../commun/historique_screen.dart';
+import '../commun/profil_screen.dart';
 import 'livreur_accueil_screen.dart';
 import 'livreur_portefeuille_screen.dart';
-import 'livreur_profil_screen.dart';
 
 /// Enveloppe de navigation pour tout le parcours livreur, même langage
 /// visuel et même pattern que ClientShellScreen (IndexedStack + barre
@@ -19,8 +21,9 @@ class _LivreurShellScreenState extends State<LivreurShellScreen> {
 
   static const _pages = [
     LivreurAccueilScreen(),
+    HistoriqueScreen(role: RoleUtilisateur.livreur),
     LivreurPortefeuilleScreen(),
-    LivreurProfilScreen(),
+    ProfilScreen(role: RoleUtilisateur.livreur),
   ];
 
   @override
@@ -52,18 +55,25 @@ class _LivreurShellScreenState extends State<LivreurShellScreen> {
                   onTap: () => setState(() => _indexActif = 0),
                 ),
                 _ItemNav(
+                  icone: Icons.bar_chart_rounded,
+                  iconeInactive: Icons.bar_chart_outlined,
+                  label: 'Historique',
+                  actif: _indexActif == 1,
+                  onTap: () => setState(() => _indexActif = 1),
+                ),
+                _ItemNav(
                   icone: Icons.account_balance_wallet_rounded,
                   iconeInactive: Icons.account_balance_wallet_outlined,
                   label: 'Portefeuille',
-                  actif: _indexActif == 1,
-                  onTap: () => setState(() => _indexActif = 1),
+                  actif: _indexActif == 2,
+                  onTap: () => setState(() => _indexActif = 2),
                 ),
                 _ItemNav(
                   icone: Icons.person_rounded,
                   iconeInactive: Icons.person_outline_rounded,
                   label: 'Profil',
-                  actif: _indexActif == 2,
-                  onTap: () => setState(() => _indexActif = 2),
+                  actif: _indexActif == 3,
+                  onTap: () => setState(() => _indexActif = 3),
                 ),
               ],
             ),
