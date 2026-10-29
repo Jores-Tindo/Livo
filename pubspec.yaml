@@ -53,6 +53,9 @@ dependencies:
   fl_chart: ^1.2.0
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.8
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

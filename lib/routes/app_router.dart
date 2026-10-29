@@ -20,8 +20,23 @@ import '../presentation/screens/livreur/zone_couverture_screen.dart';
 import '../presentation/screens/client/mes_adresses_screen.dart';
 import '../presentation/screens/client/moyens_paiement_screen.dart';
 import '../presentation/screens/client/destinataires_favoris_screen.dart';
+import '../presentation/screens/client/detail_mission_screen.dart';
+import '../presentation/screens/client/suivi_livraison_screen.dart';
+import '../presentation/screens/client/paiement_screen.dart';
+import '../presentation/screens/client/notation_screen.dart';
 import '../presentation/screens/commun/modifier_profil_screen.dart';
 import '../presentation/screens/commun/aide_support_screen.dart';
+import '../presentation/screens/commun/notifications_screen.dart';
+import '../presentation/screens/commun/parametres_screen.dart';
+import '../presentation/screens/commun/suivi_destinataire_screen.dart';
+import '../presentation/screens/onboarding/splash_screen.dart';
+import '../presentation/screens/onboarding/onboarding_screen.dart';
+import '../domain/entities/utilisateur.dart';
+import '../presentation/screens/livreur/confirmation_livraison_screen.dart';
+import '../presentation/screens/livreur/retrait_screen.dart';
+import '../presentation/screens/auth/mot_de_passe_oublie_screen.dart';
+import '../presentation/screens/auth/verification_otp_screen.dart';
+import '../presentation/screens/auth/nouveau_mot_de_passe_screen.dart';
 
 /// Centraliser la navigation ici évite deux problèmes fréquents :
 /// 1. Un utilisateur qui accède à un écran livreur alors qu'il est client
@@ -29,7 +44,7 @@ import '../presentation/screens/commun/aide_support_screen.dart';
 /// 2. Des routes dupliquées/incohérentes éparpillées dans les widgets
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/inscription',
+    initialLocation: '/splash',
     // TODO : une fois Firebase branché, ajouter ici la logique de
     // redirection selon l'état d'authentification :
     //   - non connecté -> /inscription
@@ -146,6 +161,107 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/client/destinataires-favoris',
         builder: (context, state) => const DestinatairesFavorisScreen(),
+      ),
+      GoRoute(
+        path: '/client/suivi',
+        builder: (context, state) {
+          final donnees = state.extra as Map<String, dynamic>? ?? {};
+          return SuiviLivraisonScreen(
+            nomLivreur: donnees['nomLivreur'] as String? ?? 'Livreur',
+            adresseDepart: donnees['adresseDepart'] as String? ?? '—',
+            adresseArrivee: donnees['adresseArrivee'] as String? ?? '—',
+            montant: donnees['montant'] as int? ?? 0,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/client/paiement',
+        builder: (context, state) {
+          final donnees = state.extra as Map<String, dynamic>? ?? {};
+          return PaiementScreen(
+            nomLivreur: donnees['nomLivreur'] as String? ?? 'Livreur',
+            montant: donnees['montant'] as int? ?? 0,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/client/notation',
+        builder: (context, state) {
+          final nomLivreur = state.extra as String? ?? 'ton livreur';
+          return NotationScreen(nomLivreur: nomLivreur);
+        },
+      ),
+      GoRoute(
+        path: '/client/detail-mission',
+        builder: (context, state) {
+          final donnees = state.extra as Map<String, dynamic>? ?? {};
+          return DetailMissionScreen(
+            nomLivreur: donnees['nomLivreur'] as String? ?? '—',
+            adresseDepart: donnees['adresseDepart'] as String? ?? '—',
+            adresseArrivee: donnees['adresseArrivee'] as String? ?? '—',
+            date: DateTime.tryParse(donnees['date'] as String? ?? '') ??
+                DateTime.now(),
+            montant: donnees['montant'] as int? ?? 0,
+            statut: donnees['statut'] as String? ?? 'livree',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(
+        path: '/parametres',
+        builder: (context, state) => const ParametresScreen(),
+      ),
+      GoRoute(
+        path: '/suivi-destinataire',
+        builder: (context, state) {
+          final d = state.extra as Map<String, dynamic>? ?? {};
+          return SuiviDestinataireScreen(
+            nomLivreur: d['nomLivreur'] as String? ?? 'ton livreur',
+            etape: d['etape'] as int? ?? 1,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) {
+          final role =
+              state.extra as RoleUtilisateur? ?? RoleUtilisateur.client;
+          return NotificationsScreen(role: role);
+        },
+      ),
+      GoRoute(
+        path: '/livreur/confirmation-livraison',
+        builder: (context, state) => const ConfirmationLivraisonScreen(),
+      ),
+      GoRoute(
+        path: '/livreur/retrait',
+        builder: (context, state) =>
+            RetraitScreen(solde: state.extra as int? ?? 0),
+      ),
+      GoRoute(
+        path: '/mot-de-passe-oublie',
+        builder: (context, state) => const MotDePasseOublieScreen(),
+      ),
+      GoRoute(
+        path: '/verification-otp',
+        builder: (context, state) {
+          final d = state.extra as Map<String, dynamic>? ?? {};
+          return VerificationOtpScreen(
+            telephone: d['telephone'] as String? ?? '',
+            suite: d['suite'] as String? ?? 'inscription',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/nouveau-mot-de-passe',
+        builder: (context, state) => const NouveauMotDePasseScreen(),
       ),
     ],
   );

@@ -168,6 +168,13 @@ class ProfilScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             _CarteMenu(
+              icone: Icons.settings_outlined,
+              titre: 'Paramètres',
+              sousTitre: 'Notifications, langue, sécurité',
+              onTap: () => context.push('/parametres'),
+            ),
+            const SizedBox(height: 10),
+            _CarteMenu(
               icone: Icons.help_outline_rounded,
               titre: 'Aide et support',
               onTap: () => context.push('/profil/aide'),

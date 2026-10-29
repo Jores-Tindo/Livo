@@ -62,6 +62,15 @@ class _MissionEnCoursScreenState extends State<MissionEnCoursScreen> {
     }
   }
 
+  Future<void> _confirmerRemise() async {
+    // L'écran de confirmation (QR ou code) renvoie true si la remise est
+    // validée. TODO : la validation réelle se fera côté serveur.
+    final valide = await context.push<bool>('/livreur/confirmation-livraison');
+    if (valide == true && mounted) {
+      setState(() => _etape = _EtapeLivraison.livre);
+    }
+  }
+
   void _etapeSuivante() {
     switch (_etape) {
       case _EtapeLivraison.versCollecte:
@@ -71,9 +80,7 @@ class _MissionEnCoursScreenState extends State<MissionEnCoursScreen> {
         setState(() => _etape = _EtapeLivraison.versLivraison);
         break;
       case _EtapeLivraison.versLivraison:
-        // TODO : une fois Firebase branché, demander ici la confirmation
-        // QR/photo prévue au cahier des charges avant de marquer 'livree'.
-        setState(() => _etape = _EtapeLivraison.livre);
+        _confirmerRemise();
         break;
       case _EtapeLivraison.livre:
         context.go('/livreur/accueil');

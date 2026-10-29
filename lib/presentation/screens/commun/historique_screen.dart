@@ -166,11 +166,15 @@ class _HistoriqueScreenState extends State<HistoriqueScreen> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
               sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                // Hauteur fixe proportionnelle à la taille de police du
+                // téléphone : un ratio fixe (childAspectRatio) débordait
+                // dès que l'utilisateur agrandit le texte système.
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
-                  childAspectRatio: 1.5,
+                  mainAxisExtent: 136 *
+                      MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6),
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) => _CarteStat(stat: _stats[index]),

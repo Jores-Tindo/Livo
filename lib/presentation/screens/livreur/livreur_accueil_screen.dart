@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../domain/entities/utilisateur.dart';
 
 /// Contenu de l'onglet Accueil pour un livreur. Pas de Scaffold propre —
 /// ce widget est affiché comme page dans LivreurShellScreen.
@@ -76,7 +77,8 @@ class _LivreurAccueilScreenState extends State<LivreurAccueilScreen> {
                     _BoutonIcone(
                       icone: Icons.notifications_none_rounded,
                       badge: true,
-                      onTap: () => debugPrint('Notifications'),
+                      onTap: () => context.push('/notifications',
+                          extra: RoleUtilisateur.livreur),
                     ),
                   ],
                 ),

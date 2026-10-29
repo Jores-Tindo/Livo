@@ -125,6 +125,31 @@ class _PropositionEnvoyeeScreenState extends State<PropositionEnvoyeeScreen> {
                     child: const Text('Annuler la mission'),
                   ),
                 ),
+                // --- Démo temporaire ---
+                // TODO : SUPPRIMER une fois Firebase branché. Le passage au
+                // suivi doit être déclenché par le changement de statut de
+                // la mission (acceptee) écouté en temps réel, pas par un bouton.
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: () {
+                    _timer?.cancel();
+                    context.pushReplacement(
+                      '/client/suivi',
+                      extra: {
+                        'nomLivreur': widget.nomLivreur,
+                        'adresseDepart': 'Carrefour Houeyiho, Cotonou',
+                        'adresseArrivee': 'Rue 234, Akpakpa, Cotonou',
+                        'montant': 1200,
+                      },
+                    );
+                  },
+                  icon: const Icon(Icons.visibility_outlined,
+                      size: 18, color: AppColors.textSecondary),
+                  label: const Text(
+                    '(Démo) Le livreur accepte',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
               ] else ...[
                 Container(
                   width: 120,

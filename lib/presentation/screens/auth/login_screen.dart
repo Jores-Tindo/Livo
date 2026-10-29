@@ -56,7 +56,11 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           // --- Header dégradé avec encoche (même forme que RegisterScreen) ---
           Container(
-            height: MediaQuery.sizeOf(context).height * 0.35,
+            // Hauteur MINIMALE (et non fixe) : le header grandit si le
+            // contenu est plus grand que prévu au lieu de déborder.
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.sizeOf(context).height * 0.35,
+            ),
             width: double.infinity,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -73,63 +77,74 @@ class _LoginScreenState extends State<LoginScreen> {
                 padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const SizedBox(height: 12),
-                    Row(
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Image.asset(
-                            'assets/images/logo/Logo_livo.png',
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        const SizedBox(height: 12),
+                        Row(
                           children: [
-                            Text(
-                              'Livo',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 50,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: -0.5,
+                            Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Image.asset(
+                                'assets/images/logo/Logo_livo.png',
+                                fit: BoxFit.cover,
                               ),
                             ),
-                            SizedBox(height: 0.5),
-                            Text(
-                              'Un livreur à portée de main',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 15),
+                            const SizedBox(width: 12),
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Livo',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 50,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                SizedBox(height: 0.5),
+                                Text(
+                                  'Un livreur à portée de main',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 15),
+                                ),
+                              ],
                             ),
                           ],
                         ),
+                        const SizedBox(height: 16),
                       ],
                     ),
-                    const Spacer(),
-                    const Text(
-                      'Content de te revoir',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Content de te revoir',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Connecte-toi pour continuer',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                      ],
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Connecte-toi pour continuer',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
                   ],
                 ),
               ),
@@ -211,10 +226,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: TextButton(
-                                    onPressed: () {
-                                      // TODO : écran/flux "mot de passe oublié" une fois Firebase branché
-                                      debugPrint('Mot de passe oublié');
-                                    },
+                                    onPressed: () =>
+                                        context.push('/mot-de-passe-oublie'),
                                     child: const Text('Mot de passe oublié ?'),
                                   ),
                                 ),

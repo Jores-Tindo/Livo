@@ -1,10 +1,12 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 import '../../../core/theme/app_colors.dart';
 
 enum _EtapeMission { position, details }
@@ -12,9 +14,15 @@ enum _EtapeMission { position, details }
 enum _TypeDestinataire { moiMeme, autrePersonne }
 
 /// Écran de création de mission. Deux étapes internes :
-/// 1. Positionnement départ/arrivée sur carte (pin fixe façon Uber/Bolt —
-///    c'est la carte qui bouge sous le pin, pas l'inverse)
+/// 1. Positionnement départ/arrivée sur carte OpenStreetMap (pin fixe façon
+///    Uber/Bolt — c'est la carte qui bouge sous le pin, pas l'inverse), avec
+///    en option une adresse saisie à la main et un bouton "ma position"
 /// 2. Détails de la mission : colis, destinataire, point de repère
+///
+/// La carte utilise flutter_map + OpenStreetMap : aucune clé API ni
+/// facturation. Pour la production, prévoir un fournisseur de tuiles dédié
+/// (la politique d'usage d'OSM interdit un trafic intensif sur ses
+/// serveurs publics).
 ///
 /// Voir cahier des charges 2.4 et 2.5 pour la logique des trois cas de
 /// destinataire (lui-même / autre avec compte / autre sans compte).
@@ -26,25 +34,32 @@ class NouvelleMissionScreen extends StatefulWidget {
 }
 
 class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
+  static const _invite = 'Déplace la carte pour choisir un point';
+
   final _picker = ImagePicker();
   final _geocoding = Geocoding();
-  GoogleMapController? _controleurCarte;
+  final _carteController = MapController();
+  Timer? _delaiGeocodage;
 
   _EtapeMission _etape = _EtapeMission.position;
   bool _choixDepart = true; // true = on positionne le départ, false = l'arrivée
 
-  // Position par défaut : Cotonou (à ajuster si géolocalisation dispo)
+  // Position par défaut : Cotonou
   static const _positionParDefaut = LatLng(6.3703, 2.3912);
 
   LatLng _positionCarte = _positionParDefaut;
-  String _adresseAffichee = 'Déplace la carte pour choisir un point';
+  String _adresseAffichee = _invite;
   bool _chargementAdresse = false;
+  bool _localisationEnCours = false;
 
   LatLng? _positionDepart;
   String? _adresseDepart;
   LatLng? _positionArrivee;
   String? _adresseArrivee;
 
+  // Adresse saisie à la main (facultatif) : si remplie, elle remplace
+  // l'adresse trouvée automatiquement par la carte.
+  final _adresseSaisieController = TextEditingController();
   final _pointRepereController = TextEditingController();
   final _descriptionColisController = TextEditingController();
   final _nomDestinataireController = TextEditingController();
@@ -56,7 +71,9 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
 
   @override
   void dispose() {
-    _controleurCarte?.dispose();
+    _delaiGeocodage?.cancel();
+    _carteController.dispose();
+    _adresseSaisieController.dispose();
     _pointRepereController.dispose();
     _descriptionColisController.dispose();
     _nomDestinataireController.dispose();
@@ -64,61 +81,114 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
     super.dispose();
   }
 
+  /// Appelé à chaque mouvement de la carte. On ne cherche l'adresse qu'une
+  /// fois que l'utilisateur a arrêté de bouger (délai de 600 ms), pour ne
+  /// pas saturer le service de géocodage.
+  void _surMouvementCarte(MapCamera camera, bool parGeste) {
+    _positionCarte = camera.center;
+    if (!parGeste) return;
+    _delaiGeocodage?.cancel();
+    _delaiGeocodage = Timer(const Duration(milliseconds: 600), () {
+      if (mounted) _actualiserAdresse(_positionCarte);
+    });
+  }
+
   Future<void> _utiliserPositionActuelle() async {
+    setState(() => _localisationEnCours = true);
     try {
-      final permission = await Geolocator.checkPermission();
+      final serviceActif = await Geolocator.isLocationServiceEnabled();
+      if (!serviceActif) {
+        _afficherErreur('Active la localisation (GPS) de ton téléphone');
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
-        final nouvelleAutorisation = await Geolocator.requestPermission();
-        if (nouvelleAutorisation == LocationPermission.denied ||
-            nouvelleAutorisation == LocationPermission.deniedForever) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        _afficherErreur('Autorise la localisation pour utiliser ta position');
+        return;
+      }
+
+      Position position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            timeLimit: Duration(seconds: 15),
+          ),
+        );
+      } on TimeoutException {
+        // GPS trop long à répondre (intérieur, signal faible) : on tente
+        // la dernière position connue du téléphone.
+        final derniere = await Geolocator.getLastKnownPosition();
+        if (derniere == null) {
           _afficherErreur(
-              'Autorise la localisation pour utiliser cette fonctionnalité');
+              'Signal GPS introuvable. Sors à l\'extérieur ou réessaie.');
           return;
         }
+        position = derniere;
       }
-      final position = await Geolocator.getCurrentPosition();
+
       final nouvellePosition = LatLng(position.latitude, position.longitude);
-      _controleurCarte?.animateCamera(CameraUpdate.newLatLng(nouvellePosition));
-      setState(() => _positionCarte = nouvellePosition);
-      _actualiserAdresse(nouvellePosition);
+      _positionCarte = nouvellePosition;
+      _carteController.move(nouvellePosition, 16);
+      await _actualiserAdresse(nouvellePosition);
+    } on PermissionDefinitionsNotFoundException {
+      _afficherErreur(
+          'Permissions de localisation absentes du AndroidManifest.xml');
     } catch (e) {
-      _afficherErreur('Impossible de récupérer ta position');
+      debugPrint('Erreur géolocalisation : $e');
+      _afficherErreur('Impossible de récupérer ta position ($e)');
+    } finally {
+      if (mounted) setState(() => _localisationEnCours = false);
     }
   }
 
   Future<void> _actualiserAdresse(LatLng position) async {
+    if (!mounted) return;
     setState(() => _chargementAdresse = true);
     try {
       final places = await _geocoding.placemarkFromCoordinates(
           position.latitude, position.longitude);
+      var adresse = 'Position sélectionnée';
       if (places.isNotEmpty) {
         final p = places.first;
-        setState(() {
-          _adresseAffichee = [p.street, p.subLocality, p.locality]
-              .where((e) => e != null && e.isNotEmpty)
-              .join(', ');
-          if (_adresseAffichee.isEmpty)
-            _adresseAffichee = 'Position sélectionnée';
-        });
+        final texte = [p.street, p.subLocality, p.locality]
+            .where((e) => e != null && e.isNotEmpty)
+            .join(', ');
+        if (texte.isNotEmpty) adresse = texte;
       }
+      if (mounted) setState(() => _adresseAffichee = adresse);
     } catch (_) {
-      setState(() => _adresseAffichee = 'Position sélectionnée');
+      if (mounted) setState(() => _adresseAffichee = 'Position sélectionnée');
     } finally {
-      setState(() => _chargementAdresse = false);
+      if (mounted) setState(() => _chargementAdresse = false);
     }
   }
 
   void _confirmerPosition() {
+    final saisie = _adresseSaisieController.text.trim();
+    final adresse = saisie.isNotEmpty ? saisie : _adresseAffichee;
+
+    if (adresse == _invite) {
+      _afficherErreur('Déplace la carte ou saisis une adresse pour continuer');
+      return;
+    }
+    _adresseSaisieController.clear();
+
     if (_choixDepart) {
       _positionDepart = _positionCarte;
-      _adresseDepart = _adresseAffichee;
+      _adresseDepart = adresse;
       setState(() {
         _choixDepart = false;
-        _adresseAffichee = 'Déplace la carte pour choisir un point';
+        _adresseAffichee = _invite;
       });
     } else {
       _positionArrivee = _positionCarte;
-      _adresseArrivee = _adresseAffichee;
+      _adresseArrivee = adresse;
       setState(() => _etape = _EtapeMission.details);
     }
   }
@@ -174,21 +244,45 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
   Widget _construireEtapePosition() {
     return Stack(
       children: [
-        GoogleMap(
-          initialCameraPosition:
-              const CameraPosition(target: _positionParDefaut, zoom: 15),
-          onMapCreated: (controller) => _controleurCarte = controller,
-          onCameraMove: (position) => _positionCarte = position.target,
-          onCameraIdle: () => _actualiserAdresse(_positionCarte),
-          myLocationButtonEnabled: false,
-          zoomControlsEnabled: false,
+        FlutterMap(
+          mapController: _carteController,
+          options: MapOptions(
+            initialCenter: _positionParDefaut,
+            initialZoom: 15,
+            onPositionChanged: _surMouvementCarte,
+            interactionOptions: InteractionOptions(
+              flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+            ),
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.livo.livo',
+            ),
+          ],
+        ),
+
+        // Mention obligatoire des données OpenStreetMap
+        const Positioned(
+          left: 8,
+          bottom: 330,
+          child: DecoratedBox(
+            decoration: BoxDecoration(color: Color(0xCCFFFFFF)),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              child: Text('© OpenStreetMap', style: TextStyle(fontSize: 10)),
+            ),
+          ),
         ),
 
         // Pin fixe au centre de l'écran
-        const Center(
-          child: Padding(
-            padding: EdgeInsets.only(bottom: 40),
-            child: Icon(Icons.location_on, size: 44, color: AppColors.primary),
+        const IgnorePointer(
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 40),
+              child:
+                  Icon(Icons.location_on, size: 44, color: AppColors.primary),
+            ),
           ),
         ),
 
@@ -202,9 +296,12 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                 if (!_choixDepart) {
                   setState(() {
                     _choixDepart = true;
-                    _adresseAffichee = _adresseDepart ??
-                        'Déplace la carte pour choisir un point';
+                    _adresseAffichee = _adresseDepart ?? _invite;
                   });
+                  if (_positionDepart != null) {
+                    _carteController.move(_positionDepart!, 16);
+                    _positionCarte = _positionDepart!;
+                  }
                 } else {
                   Navigator.of(context).maybePop();
                 }
@@ -216,18 +313,21 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
         // Bouton "ma position"
         Positioned(
           right: 16,
-          bottom: 220,
+          bottom: 340,
           child: _BoutonRond(
-              icone: Icons.my_location_rounded,
-              onTap: _utiliserPositionActuelle),
+            icone: _localisationEnCours
+                ? Icons.hourglass_top_rounded
+                : Icons.my_location_rounded,
+            onTap: _localisationEnCours ? () {} : _utiliserPositionActuelle,
+          ),
         ),
 
-        // Carte du bas : adresse + confirmation
+        // Carte du bas : adresse + saisie facultative + confirmation
         Align(
           alignment: Alignment.bottomCenter,
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
             decoration: const BoxDecoration(
               color: AppColors.surface,
               borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -235,6 +335,7 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
             child: SafeArea(
               top: false,
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
@@ -274,7 +375,18 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
+                  TextField(
+                    key: ValueKey(_choixDepart),
+                    controller: _adresseSaisieController,
+                    textInputAction: TextInputAction.done,
+                    decoration: const InputDecoration(
+                      hintText: 'Ou saisis l\'adresse toi-même (facultatif)',
+                      prefixIcon: Icon(Icons.edit_location_alt_outlined,
+                          color: AppColors.textSecondary, size: 20),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   SizedBox(
                     height: 54,
                     child: ElevatedButton(

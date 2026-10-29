@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 
 enum _TypeTransaction { gain, retrait }
@@ -114,7 +115,8 @@ class LivreurPortefeuilleScreen extends StatelessWidget {
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton.icon(
-                          onPressed: () => debugPrint('Retrait Mobile Money'),
+                          onPressed: () =>
+                              context.push('/livreur/retrait', extra: 38400),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: AppColors.primaryDark,

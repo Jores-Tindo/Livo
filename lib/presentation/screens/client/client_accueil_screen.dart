@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../domain/entities/utilisateur.dart';
 
 /// Contenu de l'onglet Accueil pour un client. Pas de Scaffold propre —
 /// ce widget est affiché comme page dans ClientShellScreen, qui porte
@@ -46,7 +47,7 @@ class ClientAccueilScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.delivery_dining_sharp,
+                      child: const Icon(Icons.bolt_rounded,
                           color: Colors.white, size: 24),
                     ),
                     const SizedBox(width: 12),
@@ -54,9 +55,9 @@ class ClientAccueilScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('$_salutation ',
+                          Text('$_salutation 👋',
                               style: Theme.of(context).textTheme.bodyMedium),
-                          Text('Tu veux reçevoir ou envoyer un colis ?',
+                          Text('Où veux-tu envoyer un colis ?',
                               style: Theme.of(context).textTheme.titleLarge),
                         ],
                       ),
@@ -64,14 +65,15 @@ class ClientAccueilScreen extends StatelessWidget {
                     _BoutonIcone(
                       icone: Icons.notifications_none_rounded,
                       badge: true,
-                      onTap: () => debugPrint('Notifications'),
+                      onTap: () => context.push('/notifications',
+                          extra: RoleUtilisateur.client),
                     ),
                   ],
                 ),
               ),
             ),
 
-            // --- Carte CTA principale pour une nouvelle mission ---
+            // --- Carte CTA principale ---
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
@@ -89,7 +91,7 @@ class ClientAccueilScreen extends StatelessWidget {
                     Text('Livreurs disponibles',
                         style: Theme.of(context).textTheme.titleLarge),
                     TextButton(
-                      onPressed: () => context.push('/client/liste-livreurs'),
+                      onPressed: () => debugPrint('Voir tout'),
                       child: const Text('Voir tout'),
                     ),
                   ],
@@ -250,7 +252,7 @@ class _CarteCTAState extends State<_CarteCTA> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Faites livrer ou faites vous livrer un colis',
+                      'Envoyer un colis',
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
