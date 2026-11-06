@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -8,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/lien_localisation.dart';
 
 enum _EtapeMission { position, details }
 
@@ -51,6 +53,8 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
   String _adresseAffichee = _invite;
   bool _chargementAdresse = false;
   bool _localisationEnCours = false;
+  bool _rechercheLienEnCours = false;
+  int _longueurSaisiePrecedente = 0;
 
   LatLng? _positionDepart;
   String? _adresseDepart;
@@ -68,6 +72,8 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
   _TypeDestinataire _typeDestinataire = _TypeDestinataire.moiMeme;
   XFile? _photoLieu;
   bool _chargementEnvoi = false;
+  bool _envoyerSmsSuivi = true;
+  bool _destinataireConfirmePosition = true;
 
   @override
   void dispose() {
@@ -147,6 +153,58 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
     }
   }
 
+  /// Colle le contenu du presse-papiers (lien Google Maps, coordonnées ou
+  /// simple adresse) dans le champ, puis lance l'analyse.
+  Future<void> _collerDepuisPressePapiers() async {
+    final donnees = await Clipboard.getData(Clipboard.kTextPlain);
+    final texte = donnees?.text?.trim() ?? '';
+    if (texte.isEmpty) {
+      _afficherErreur('Le presse-papiers est vide');
+      return;
+    }
+    _adresseSaisieController.text = texte;
+    _longueurSaisiePrecedente = texte.length;
+    if (LienLocalisation.ressembleAUnLien(texte)) {
+      await _chercherDepuisTexte(texte);
+    }
+  }
+
+  /// Retrouve un point sur la carte à partir d'un lien Google Maps ou de
+  /// coordonnées. En cas d'échec, on garde la saisie manuelle : la
+  /// personne peut toujours décrire le lieu elle-même.
+  Future<void> _chercherDepuisTexte(String texte) async {
+    if (_rechercheLienEnCours) return;
+    setState(() => _rechercheLienEnCours = true);
+    try {
+      final resultat = await LienLocalisation.resoudre(texte);
+      var position = resultat.position;
+
+      if (position == null && resultat.nomLieu != null) {
+        try {
+          final lieux = await _geocoding.locationFromAddress(resultat.nomLieu!);
+          if (lieux.isNotEmpty)
+            position = LatLng(lieux.first.latitude, lieux.first.longitude);
+        } catch (_) {}
+      }
+      if (!mounted) return;
+
+      if (position == null) {
+        _afficherErreur(
+            'Lien non reconnu. Écris le lieu toi-même dans le champ ou ajoute un point de repère.');
+        return;
+      }
+
+      _adresseSaisieController.clear();
+      _longueurSaisiePrecedente = 0;
+      _positionCarte = position;
+      _carteController.move(position, 17);
+      await _actualiserAdresse(position);
+      _afficherSucces('Position retrouvée sur la carte');
+    } finally {
+      if (mounted) setState(() => _rechercheLienEnCours = false);
+    }
+  }
+
   Future<void> _actualiserAdresse(LatLng position) async {
     if (!mounted) return;
     setState(() => _chargementAdresse = true);
@@ -171,6 +229,13 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
 
   void _confirmerPosition() {
     final saisie = _adresseSaisieController.text.trim();
+
+    // Un lien ou des coordonnées non encore analysés : on les analyse
+    // d'abord au lieu de les enregistrer comme "adresse".
+    if (saisie.isNotEmpty && LienLocalisation.ressembleAUnLien(saisie)) {
+      _chercherDepuisTexte(saisie);
+      return;
+    }
     final adresse = saisie.isNotEmpty ? saisie : _adresseAffichee;
 
     if (adresse == _invite) {
@@ -205,12 +270,25 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
     );
   }
 
+  void _afficherSucces(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppColors.success),
+    );
+  }
+
   void _envoyerMission() {
-    if (_typeDestinataire == _TypeDestinataire.autrePersonne &&
-        (_nomDestinataireController.text.trim().isEmpty ||
-            _telephoneDestinataireController.text.trim().isEmpty)) {
-      _afficherErreur('Renseigne le nom et le téléphone du destinataire');
-      return;
+    if (_typeDestinataire == _TypeDestinataire.autrePersonne) {
+      if (_nomDestinataireController.text.trim().isEmpty ||
+          _telephoneDestinataireController.text.trim().isEmpty) {
+        _afficherErreur('Renseigne le nom et le téléphone du destinataire');
+        return;
+      }
+      if (!RegExp(r'^\d{10}$')
+          .hasMatch(_telephoneDestinataireController.text.trim())) {
+        _afficherErreur(
+            'Le téléphone du destinataire doit contenir 10 chiffres');
+        return;
+      }
     }
     if (_descriptionColisController.text.trim().isEmpty) {
       _afficherErreur('Décris brièvement ce que tu envoies');
@@ -222,6 +300,13 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
     // TODO : une fois Firebase branché, créer le document dans missions/
     // avec statut = 'en_attente_choix' avant de naviguer (voir cahier des
     // charges 2.4 — sélection manuelle par le client).
+    //
+    // Si le destinataire est une autre personne (et envoyerSmsSuivi) : une
+    // Cloud Function (jamais l'app) crée un jeton de suivi long et aléatoire
+    // pour cette mission, puis envoie au destinataire le lien de suivi
+    // par SMS. Si son numéro correspond à un compte Livo, elle envoie en
+    // plus une notification push (FCM). Le lien ne donne accès qu'à cette
+    // mission, en lecture seule, et expire après la livraison.
 
     debugPrint(
         'Mission : $_adresseDepart -> $_adresseArrivee, ${_descriptionColisController.text}');
@@ -380,10 +465,40 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                     key: ValueKey(_choixDepart),
                     controller: _adresseSaisieController,
                     textInputAction: TextInputAction.done,
-                    decoration: const InputDecoration(
-                      hintText: 'Ou saisis l\'adresse toi-même (facultatif)',
-                      prefixIcon: Icon(Icons.edit_location_alt_outlined,
+                    onChanged: (valeur) {
+                      // Un grand saut de longueur = un collage : si c'est un
+                      // lien ou des coordonnées, on les analyse tout de suite.
+                      final saut = valeur.length - _longueurSaisiePrecedente;
+                      _longueurSaisiePrecedente = valeur.length;
+                      if (saut > 8 &&
+                          LienLocalisation.ressembleAUnLien(valeur)) {
+                        _chercherDepuisTexte(valeur);
+                      }
+                    },
+                    onSubmitted: (valeur) {
+                      if (LienLocalisation.ressembleAUnLien(valeur))
+                        _chercherDepuisTexte(valeur);
+                    },
+                    decoration: InputDecoration(
+                      hintText:
+                          'Colle un lien Google Maps / coordonnées, ou écris l\'adresse',
+                      prefixIcon: const Icon(Icons.edit_location_alt_outlined,
                           color: AppColors.textSecondary, size: 20),
+                      suffixIcon: _rechercheLienEnCours
+                          ? const Padding(
+                              padding: EdgeInsets.all(14),
+                              child: SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2)),
+                            )
+                          : IconButton(
+                              tooltip: 'Coller',
+                              icon: const Icon(Icons.content_paste_rounded,
+                                  size: 20),
+                              onPressed: _collerDepuisPressePapiers,
+                            ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -569,13 +684,53 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                     TextFormField(
                       controller: _telephoneDestinataireController,
                       keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10)
+                      ],
                       decoration: const InputDecoration(
                         labelText: 'Téléphone du destinataire',
                         prefixIcon: Icon(Icons.phone_outlined,
                             color: AppColors.textSecondary, size: 20),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        children: [
+                          SwitchListTile(
+                            value: _envoyerSmsSuivi,
+                            activeColor: AppColors.primary,
+                            onChanged: (v) =>
+                                setState(() => _envoyerSmsSuivi = v),
+                            title: const Text('Envoyer le suivi en direct',
+                                style: TextStyle(fontWeight: FontWeight.w600)),
+                            subtitle: const Text(
+                                'Il reçoit un SMS avec un lien pour suivre le livreur et le point d\'arrivée'),
+                          ),
+                          const Divider(height: 1),
+                          SwitchListTile(
+                            value: _envoyerSmsSuivi &&
+                                _destinataireConfirmePosition,
+                            activeColor: AppColors.primary,
+                            onChanged: _envoyerSmsSuivi
+                                ? (v) => setState(
+                                    () => _destinataireConfirmePosition = v)
+                                : null,
+                            title: const Text('Il peut confirmer sa position',
+                                style: TextStyle(fontWeight: FontWeight.w600)),
+                            subtitle: const Text(
+                                'Il partage où il se trouve pour guider le livreur jusqu\'à lui'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -583,13 +738,14 @@ class _NouvelleMissionScreenState extends State<NouvelleMissionScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(Icons.info_outline_rounded,
                               color: AppColors.info, size: 18),
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Le destinataire recevra un SMS avec le suivi de la livraison.',
+                              'S\'il a l\'application Livo, il est aussi notifié directement. Il présente à la livraison le code de remise qu\'il voit sur la page de suivi.',
                               style: TextStyle(
                                   color: AppColors.textSecondary, fontSize: 13),
                             ),

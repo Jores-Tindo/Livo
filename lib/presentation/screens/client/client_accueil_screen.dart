@@ -91,7 +91,8 @@ class ClientAccueilScreen extends StatelessWidget {
                     Text('Livreurs disponibles',
                         style: Theme.of(context).textTheme.titleLarge),
                     TextButton(
-                      onPressed: () => debugPrint('Voir tout'),
+                      onPressed: () =>
+                          context.push('/client/livreurs-disponibles'),
                       child: const Text('Voir tout'),
                     ),
                   ],

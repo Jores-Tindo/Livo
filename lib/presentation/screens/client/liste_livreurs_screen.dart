@@ -62,8 +62,13 @@ const _livreursMock = [
 /// client après la création d'une mission. Le client choisit manuellement
 /// (voir cahier des charges 2.4 — matching manuel côté client, pas
 /// d'attribution automatique).
+///
+/// [consultation] : true quand on arrive depuis "Voir tout" de l'accueil,
+/// sans mission en cours. Le bouton propose alors de créer une mission
+/// au lieu d'envoyer une proposition à ce livreur.
 class ListeLivreursScreen extends StatelessWidget {
-  const ListeLivreursScreen({super.key});
+  final bool consultation;
+  const ListeLivreursScreen({super.key, this.consultation = false});
 
   @override
   Widget build(BuildContext context) {
@@ -100,8 +105,11 @@ class ListeLivreursScreen extends StatelessWidget {
                 final livreur = _livreursMock[index];
                 return _CarteLivreurDispo(
                   livreur: livreur,
-                  onChoisir: () => context.push('/client/proposition-envoyee',
-                      extra: livreur.nom),
+                  libelleBouton: consultation ? 'Envoyer' : 'Choisir',
+                  onChoisir: () => consultation
+                      ? context.push('/client/nouvelle-mission')
+                      : context.push('/client/proposition-envoyee',
+                          extra: livreur.nom),
                 );
               },
             ),
@@ -115,8 +123,12 @@ class ListeLivreursScreen extends StatelessWidget {
 class _CarteLivreurDispo extends StatelessWidget {
   final _LivreurDispo livreur;
   final VoidCallback onChoisir;
+  final String libelleBouton;
 
-  const _CarteLivreurDispo({required this.livreur, required this.onChoisir});
+  const _CarteLivreurDispo(
+      {required this.livreur,
+      required this.onChoisir,
+      required this.libelleBouton});
 
   @override
   Widget build(BuildContext context) {
@@ -156,14 +168,20 @@ class _CarteLivreurDispo extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 10,
                   children: [
-                    const Icon(Icons.star_rounded,
-                        color: AppColors.warning, size: 16),
-                    const SizedBox(width: 2),
-                    Text('${livreur.note}',
-                        style: Theme.of(context).textTheme.bodySmall),
-                    const SizedBox(width: 10),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.star_rounded,
+                            color: AppColors.warning, size: 16),
+                        const SizedBox(width: 2),
+                        Text('${livreur.note}',
+                            style: Theme.of(context).textTheme.bodySmall),
+                      ],
+                    ),
                     Text(
                       '${livreur.nombreLivraisons} livraisons',
                       style: Theme.of(context).textTheme.bodySmall,
@@ -192,9 +210,12 @@ class _CarteLivreurDispo extends StatelessWidget {
           ElevatedButton(
             onPressed: onChoisir,
             style: ElevatedButton.styleFrom(
+              // Indispensable dans une Row : annule la largeur infinie que le
+              // thème peut imposer aux boutons pleine largeur.
+              minimumSize: const Size(0, 44),
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             ),
-            child: const Text('Choisir'),
+            child: Text(libelleBouton),
           ),
         ],
       ),

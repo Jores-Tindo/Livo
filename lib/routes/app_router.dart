@@ -85,6 +85,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ListeLivreursScreen(),
       ),
       GoRoute(
+        path: '/client/livreurs-disponibles',
+        builder: (context, state) =>
+            const ListeLivreursScreen(consultation: true),
+      ),
+      GoRoute(
         path: '/client/proposition-envoyee',
         builder: (context, state) {
           final nomLivreur = state.extra as String? ?? 'ce livreur';
