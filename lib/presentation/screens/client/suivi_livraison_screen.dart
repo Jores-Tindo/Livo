@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/config/app_config.dart';
+import '../../../core/utils/lanceur.dart';
 
 enum _EtapeSuivi { versCollecte, colisRecupere, versLivraison, livre }
 
@@ -251,7 +253,12 @@ class _SuiviLivraisonScreenState extends State<SuiviLivraisonScreen> {
                               ),
                             ),
                             IconButton(
-                              onPressed: () => debugPrint('Appeler le livreur'),
+                              // TODO : numéro du livreur issu de Firestore (idéalement numéro relais).
+                              onPressed: () => Lanceur.avecMessage(
+                                context,
+                                Lanceur.appeler(AppConfig.telephoneSupport),
+                                'Impossible de lancer l\'appel',
+                              ),
                               icon: const Icon(Icons.call_rounded,
                                   color: AppColors.primary),
                               style: IconButton.styleFrom(
@@ -322,7 +329,7 @@ class _SuiviLivraisonScreenState extends State<SuiviLivraisonScreen> {
                             child: const Text('Procéder au paiement'),
                           ),
                         )
-                      else ...[
+                      else if (AppConfig.modeDemo) ...[
                         // --- Démo : ce que verra un destinataire sans compte ---
                         // TODO : remplacer par "Partager le lien de suivi" (SMS/WhatsApp).
                         OutlinedButton.icon(

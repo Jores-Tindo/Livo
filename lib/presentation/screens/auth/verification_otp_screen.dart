@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/config/app_config.dart';
 
 /// Code de démonstration. En production, le code est généré et vérifié
 /// par Firebase Auth (Phone Auth) : l'app ne connaît jamais le bon code.
@@ -237,11 +238,13 @@ class _VerificationOtpScreenState extends State<VerificationOtpScreen> {
                         onPressed: _renvoyer,
                         child: const Text('Renvoyer le code')),
               ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text('(Démo) le code est 123456',
-                    style: Theme.of(context).textTheme.bodySmall),
-              ),
+              if (AppConfig.modeDemo) ...[
+                const SizedBox(height: 8),
+                Center(
+                  child: Text('(Démo) le code est 123456',
+                      style: Theme.of(context).textTheme.bodySmall),
+                ),
+              ],
             ],
           ),
         ),

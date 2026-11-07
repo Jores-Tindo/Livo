@@ -144,19 +144,6 @@ class _HistoriqueScreenState extends State<HistoriqueScreen> {
                       selectionne: _periode == _Periode.annee,
                       onTap: () => setState(() => _periode = _Periode.annee),
                     ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => debugPrint('Filtres avancés'),
-                      icon: const Icon(Icons.tune_rounded,
-                          color: AppColors.textSecondary),
-                      style: IconButton.styleFrom(
-                        backgroundColor: AppColors.surface,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(color: AppColors.border),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),

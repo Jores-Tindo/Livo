@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/etat_vide.dart';
 
 class _MoyenPaiement {
   final String operateur;
@@ -69,70 +70,81 @@ class _MoyensPaiementScreenState extends State<MoyensPaiementScreen> {
         foregroundColor: AppColors.textPrimary,
       ),
       body: SafeArea(
-        child: ListView.separated(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
-          itemCount: _moyens.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 10),
-          itemBuilder: (context, index) {
-            final moyen = _moyens[index];
-            return Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                    color:
-                        moyen.parDefaut ? AppColors.primary : AppColors.border,
-                    width: moyen.parDefaut ? 1.5 : 1),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
+        child: _moyens.isEmpty
+            ? const EtatVide(
+                icone: Icons.account_balance_wallet_outlined,
+                titre: 'Aucun moyen de paiement',
+                message:
+                    'Ajoute un compte Mobile Money pour payer tes livraisons.',
+              )
+            : ListView.separated(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
+                itemCount: _moyens.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final moyen = _moyens[index];
+                  return Container(
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                        color: AppColors.accent.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(12)),
-                    child: const Icon(Icons.account_balance_wallet_rounded,
-                        color: AppColors.accent, size: 20),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                          color: moyen.parDefaut
+                              ? AppColors.primary
+                              : AppColors.border,
+                          width: moyen.parDefaut ? 1.5 : 1),
+                    ),
+                    child: Row(
                       children: [
-                        Text(moyen.operateur,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w600)),
-                        Text(moyen.numero,
-                            style: Theme.of(context).textTheme.bodySmall),
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                              color: AppColors.accent.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12)),
+                          child: const Icon(
+                              Icons.account_balance_wallet_rounded,
+                              color: AppColors.accent,
+                              size: 20),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(moyen.operateur,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600)),
+                              Text(moyen.numero,
+                                  style: Theme.of(context).textTheme.bodySmall),
+                            ],
+                          ),
+                        ),
+                        if (moyen.parDefaut)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8)),
+                            child: const Text('Par défaut',
+                                style: TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700)),
+                          )
+                        else
+                          TextButton(
+                            onPressed: () => _definirParDefaut(index),
+                            child: const Text('Définir',
+                                style: TextStyle(fontSize: 12)),
+                          ),
                       ],
                     ),
-                  ),
-                  if (moyen.parDefaut)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(8)),
-                      child: const Text('Par défaut',
-                          style: TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700)),
-                    )
-                  else
-                    TextButton(
-                      onPressed: () => _definirParDefaut(index),
-                      child:
-                          const Text('Définir', style: TextStyle(fontSize: 12)),
-                    ),
-                ],
+                  );
+                },
               ),
-            );
-          },
-        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _ajouterMoyen,

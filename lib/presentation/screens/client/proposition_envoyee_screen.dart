@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/config/app_config.dart';
 
 /// Écran d'attente après que le client a choisi un livreur. Affiche un
 /// décompte (voir cahier des charges 2.4 — délai avant fallback vers un
@@ -129,27 +130,29 @@ class _PropositionEnvoyeeScreenState extends State<PropositionEnvoyeeScreen> {
                 // TODO : SUPPRIMER une fois Firebase branché. Le passage au
                 // suivi doit être déclenché par le changement de statut de
                 // la mission (acceptee) écouté en temps réel, pas par un bouton.
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: () {
-                    _timer?.cancel();
-                    context.pushReplacement(
-                      '/client/suivi',
-                      extra: {
-                        'nomLivreur': widget.nomLivreur,
-                        'adresseDepart': 'Carrefour Houeyiho, Cotonou',
-                        'adresseArrivee': 'Rue 234, Akpakpa, Cotonou',
-                        'montant': 1200,
-                      },
-                    );
-                  },
-                  icon: const Icon(Icons.visibility_outlined,
-                      size: 18, color: AppColors.textSecondary),
-                  label: const Text(
-                    '(Démo) Le livreur accepte',
-                    style: TextStyle(color: AppColors.textSecondary),
+                if (AppConfig.modeDemo) ...[
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () {
+                      _timer?.cancel();
+                      context.pushReplacement(
+                        '/client/suivi',
+                        extra: {
+                          'nomLivreur': widget.nomLivreur,
+                          'adresseDepart': 'Carrefour Houeyiho, Cotonou',
+                          'adresseArrivee': 'Rue 234, Akpakpa, Cotonou',
+                          'montant': 1200,
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.visibility_outlined,
+                        size: 18, color: AppColors.textSecondary),
+                    label: const Text(
+                      '(Démo) Le livreur accepte',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
                   ),
-                ),
+                ],
               ] else ...[
                 Container(
                   width: 120,

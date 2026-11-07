@@ -43,7 +43,7 @@ dependencies:
   intl: ^0.20.3                  # formatage dates/devises (FCFA)
   image_picker: ^1.2.3           # pièce d'identité, photos de mission
   permission_handler: ^13.0.1
-  url_launcher: ^6.3.2            # appels téléphoniques directs
+  url_launcher: ^6.3.3            # appels téléphoniques directs
   connectivity_plus: ^7.3.1       # gestion réseau instable
 
   # Sécurité

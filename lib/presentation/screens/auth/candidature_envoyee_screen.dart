@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/config/app_config.dart';
 
 /// Écran affiché juste après la soumission du formulaire de candidature
 /// livreur. Pas de formulaire ici — juste une confirmation rassurante
@@ -140,16 +141,18 @@ class CandidatureEnvoyeeScreen extends StatelessWidget {
               // Il ne sert qu'à tester l'UI livreur avant que la validation
               // de candidature (statut == 'valide') ne débloque vraiment
               // l'accès, comme prévu au cahier des charges.
-              const SizedBox(height: 24),
-              TextButton.icon(
-                onPressed: () => context.go('/livreur/accueil'),
-                icon: const Icon(Icons.visibility_outlined,
-                    size: 18, color: AppColors.textSecondary),
-                label: const Text(
-                  '(Démo) Voir l\'espace livreur',
-                  style: TextStyle(color: AppColors.textSecondary),
+              if (AppConfig.modeDemo) ...[
+                const SizedBox(height: 24),
+                TextButton.icon(
+                  onPressed: () => context.go('/livreur/accueil'),
+                  icon: const Icon(Icons.visibility_outlined,
+                      size: 18, color: AppColors.textSecondary),
+                  label: const Text(
+                    '(Démo) Voir l\'espace livreur',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),

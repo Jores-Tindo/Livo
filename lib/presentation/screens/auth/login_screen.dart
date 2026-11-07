@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/config/app_config.dart';
 import '../../../core/theme/app_colors.dart';
 
 /// Écran de connexion. Même langage visuel que RegisterScreen (encoche
@@ -35,17 +36,58 @@ class _LoginScreenState extends State<LoginScreen> {
       // à AuthController/AuthRepository (Firebase Auth signInWithEmailAndPassword
       // ou équivalent téléphone), puis rediriger selon le rôle de l'utilisateur.
 
-      debugPrint('Connexion : ${_identifiantController.text}');
-
       setState(() => _chargement = false);
+      _entrerEnModeDemo();
     }
+  }
+
+  /// Sans Firebase, aucun compte n'existe : en mode démo, on laisse choisir
+  /// quel espace ouvrir pour pouvoir tester l'application.
+  /// TODO : supprimer avec AppConfig.modeDemo (le rôle viendra du profil).
+  Future<void> _entrerEnModeDemo() async {
+    if (!AppConfig.modeDemo) return;
+    final route = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('(Démo) Ouvrir l\'espace…',
+                  style: Theme.of(ctx).textTheme.titleLarge),
+              const SizedBox(height: 8),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.person_outline_rounded,
+                    color: AppColors.primary),
+                title: const Text('Client'),
+                onTap: () => Navigator.pop(ctx, '/client/accueil'),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.two_wheeler_rounded,
+                    color: AppColors.primary),
+                title: const Text('Livreur'),
+                onTap: () => Navigator.pop(ctx, '/livreur/accueil'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (route != null && mounted) context.go(route);
   }
 
   void _seConnecterAvecGoogle() {
     // TODO : une fois Firebase branché, intégrer le package google_sign_in
     // + FirebaseAuth.instance.signInWithCredential(...). L'utilisateur
     // devra ensuite passer par /choix-profil s'il n'a pas encore de rôle.
-    debugPrint('Connexion Google demandée');
+    _entrerEnModeDemo();
   }
 
   @override
@@ -320,29 +362,33 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-/// Petit substitut visuel au logo Google officiel (pas d'accès aux
-/// assets de marque ici). À remplacer par le vrai logo (SVG/PNG
-/// officiel Google) une fois récupéré, pour rester conforme aux
-/// règles d'utilisation de la marque Google.
+/// Logo Google. Charge le logo officiel s'il est présent dans
+/// assets/images/logo/google_g.png (à télécharger depuis les ressources de
+/// marque "Sign in with Google" de Google, pour respecter leurs règles) ;
+/// sinon affiche un "G" neutre.
 class _LogoGoogle extends StatelessWidget {
   const _LogoGoogle();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Image.asset(
+      'assets/images/logo/google_g.png',
       width: 20,
       height: 20,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.border),
-      ),
-      child: const Text(
-        'G',
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: AppColors.primary,
+      errorBuilder: (_, __, ___) => Container(
+        width: 20,
+        height: 20,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.border),
+        ),
+        child: const Text(
+          'G',
+          style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: AppColors.primary),
         ),
       ),
     );

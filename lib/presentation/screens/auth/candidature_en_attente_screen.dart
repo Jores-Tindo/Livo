@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/config/app_config.dart';
+import '../../../core/utils/lanceur.dart';
 
 /// Écran affiché quand un utilisateur avec le rôle "livreur" essaie
 /// d'accéder à son espace mais que sa candidature n'est pas encore
@@ -140,11 +142,13 @@ class CandidatureEnAttenteScreen extends StatelessWidget {
                   statut == StatutAffichage.suspendu) ...[
                 const SizedBox(height: 12),
                 TextButton(
-                  onPressed: () {
-                    // TODO : brancher sur un vrai canal de contact support
-                    // (WhatsApp Business, email, ou écran de ticket interne).
-                    debugPrint('Contacter le support');
-                  },
+                  onPressed: () => Lanceur.avecMessage(
+                    context,
+                    Lanceur.whatsapp(AppConfig.whatsappSupport,
+                        message:
+                            'Bonjour, à propos de ma candidature livreur Livo.'),
+                    'WhatsApp n\'est pas installé sur ce téléphone',
+                  ),
                   child: const Text('Contacter le support'),
                 ),
               ],

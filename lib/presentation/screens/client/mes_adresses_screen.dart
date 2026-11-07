@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/etat_vide.dart';
 
 class _Adresse {
   final String libelle;
@@ -64,53 +65,61 @@ class _MesAdressesScreenState extends State<MesAdressesScreen> {
         foregroundColor: AppColors.textPrimary,
       ),
       body: SafeArea(
-        child: ListView.separated(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
-          itemCount: _adresses.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 10),
-          itemBuilder: (context, index) {
-            final adresse = _adresses[index];
-            return Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
+        child: _adresses.isEmpty
+            ? const EtatVide(
+                icone: Icons.location_off_outlined,
+                titre: 'Aucune adresse enregistrée',
+                message:
+                    'Ajoute ton domicile ou ton travail pour créer une mission plus vite.',
+              )
+            : ListView.separated(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
+                itemCount: _adresses.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final adresse = _adresses[index];
+                  return Container(
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12)),
-                    child:
-                        Icon(adresse.icone, color: AppColors.primary, size: 20),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
                       children: [
-                        Text(adresse.libelle,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w600)),
-                        Text(adresse.details,
-                            style: Theme.of(context).textTheme.bodySmall),
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12)),
+                          child: Icon(adresse.icone,
+                              color: AppColors.primary, size: 20),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(adresse.libelle,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600)),
+                              Text(adresse.details,
+                                  style: Theme.of(context).textTheme.bodySmall),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () =>
+                              setState(() => _adresses.removeAt(index)),
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              color: AppColors.danger, size: 20),
+                        ),
                       ],
                     ),
-                  ),
-                  IconButton(
-                    onPressed: () => setState(() => _adresses.removeAt(index)),
-                    icon: const Icon(Icons.delete_outline_rounded,
-                        color: AppColors.danger, size: 20),
-                  ),
-                ],
+                  );
+                },
               ),
-            );
-          },
-        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _ajouterAdresse,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
 
 enum _StatutDocument { valide, enAttente, refuse }
@@ -72,6 +73,18 @@ class MesDocumentsScreen extends StatelessWidget {
 class _CarteDocument extends StatelessWidget {
   final _Document document;
   const _CarteDocument({required this.document});
+
+  Future<void> _mettreAJour(BuildContext context) async {
+    final image = await ImagePicker()
+        .pickImage(source: ImageSource.gallery, imageQuality: 80);
+    if (image == null || !context.mounted) return;
+    // TODO : envoyer vers Firebase Storage ; le document repasse alors en
+    // "en attente" jusqu'à validation par l'équipe (jamais "validé" côté app).
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text('${document.titre} envoyé. Il sera vérifié sous peu.')),
+    );
+  }
 
   (Color, String, IconData) get _config {
     switch (document.statut) {
@@ -153,7 +166,7 @@ class _CarteDocument extends StatelessWidget {
               ),
               const Spacer(),
               TextButton.icon(
-                onPressed: () => debugPrint('Re-uploader ${document.titre}'),
+                onPressed: () => _mettreAJour(context),
                 icon: const Icon(Icons.upload_outlined, size: 16),
                 label: const Text('Mettre à jour'),
               ),

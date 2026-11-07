@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/config/app_config.dart';
+import '../../../core/utils/lanceur.dart';
 
 class _Question {
   final String question;
@@ -59,7 +61,12 @@ class AideSupportScreen extends StatelessWidget {
                     icone: Icons.chat_bubble_outline_rounded,
                     titre: 'WhatsApp',
                     couleur: AppColors.success,
-                    onTap: () => debugPrint('Ouvrir WhatsApp support'),
+                    onTap: () => Lanceur.avecMessage(
+                      context,
+                      Lanceur.whatsapp(AppConfig.whatsappSupport,
+                          message: 'Bonjour Livo, j\'ai besoin d\'aide.'),
+                      'WhatsApp n\'est pas installé sur ce téléphone',
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -68,7 +75,11 @@ class AideSupportScreen extends StatelessWidget {
                     icone: Icons.mail_outline_rounded,
                     titre: 'Email',
                     couleur: AppColors.info,
-                    onTap: () => debugPrint('Ouvrir email support'),
+                    onTap: () => Lanceur.avecMessage(
+                      context,
+                      Lanceur.email(AppConfig.emailSupport, sujet: 'Aide Livo'),
+                      'Aucune application e-mail trouvée',
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -77,7 +88,11 @@ class AideSupportScreen extends StatelessWidget {
                     icone: Icons.call_outlined,
                     titre: 'Appeler',
                     couleur: AppColors.primary,
-                    onTap: () => debugPrint('Appeler support'),
+                    onTap: () => Lanceur.avecMessage(
+                      context,
+                      Lanceur.appeler(AppConfig.telephoneSupport),
+                      'Impossible de lancer l\'appel',
+                    ),
                   ),
                 ),
               ],

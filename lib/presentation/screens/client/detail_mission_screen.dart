@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/config/app_config.dart';
+import '../../../core/utils/lanceur.dart';
+import '../../../core/widgets/signalement.dart';
 
 /// Détail d'une mission passée ou en cours, ouvert depuis la liste
 /// "Mes missions". Reçoit les données via `extra` (Map) depuis
@@ -169,7 +172,13 @@ class DetailMissionScreen extends StatelessWidget {
                   ),
                   if (enCours)
                     IconButton(
-                      onPressed: () => debugPrint('Appeler le livreur'),
+                      // TODO : le numéro viendra de Firestore ; idéalement passer par un
+                      // numéro relais pour ne pas exposer le téléphone du livreur.
+                      onPressed: () => Lanceur.avecMessage(
+                        context,
+                        Lanceur.appeler(AppConfig.telephoneSupport),
+                        'Impossible de lancer l\'appel',
+                      ),
                       icon: const Icon(Icons.call_rounded,
                           color: AppColors.primary),
                       style: IconButton.styleFrom(
@@ -207,7 +216,7 @@ class DetailMissionScreen extends StatelessWidget {
               SizedBox(
                 height: 54,
                 child: OutlinedButton.icon(
-                  onPressed: () => debugPrint('Signaler un problème'),
+                  onPressed: () => afficherSignalement(context),
                   icon: const Icon(Icons.flag_outlined, size: 18),
                   label: const Text('Signaler un problème'),
                 ),
